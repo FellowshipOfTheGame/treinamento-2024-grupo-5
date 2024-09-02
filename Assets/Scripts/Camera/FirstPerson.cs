@@ -32,6 +32,8 @@ public class FirstPerson : MonoBehaviour
         _xRotation += horizontalInput;
         _yRotation += verticalInput;
 
+        _yRotation = Math.Clamp(_yRotation, -90f, 90f);
+        
         transform.localEulerAngles = new Vector3(-_yRotation, _xRotation, 0);
 
         playerBody.localEulerAngles = new Vector3(0, _xRotation, 0);
