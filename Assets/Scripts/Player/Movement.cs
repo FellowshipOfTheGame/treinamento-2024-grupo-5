@@ -26,7 +26,7 @@ public class Movement : MonoBehaviour
         _strafe = strafeInput * speed * transform.right;
 
         Vector3 finalVelocity = _forward + _strafe;
-        finalVelocity.y += Physics.gravity.y + Time.deltaTime;
+        finalVelocity.y += Physics.gravity.y;
         
         _characterController.Move(finalVelocity * Time.deltaTime);
     }
