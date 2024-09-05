@@ -198,10 +198,14 @@ MonoBehaviour:
   rb: {fileID: 36373505}
   orientation: {fileID: 931000475}
   body: {fileID: 1244851272}
-  moveSpeed: 2000
+  moveSpeed: 30
   moveMaxSpeed: 20
-  gravityMultiplier: 1
+  isStatic: 1
+  counterMovementRate: 0.175
+  staticDesacellerationTime: 0.35
+  gravityMultiplier: 5
   jumpForce: 20
+  isJumping: 0
   keyboard: {x: 0, y: 0}
 --- !u!1 &39904384
 GameObject:

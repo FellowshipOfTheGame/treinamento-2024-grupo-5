@@ -14,10 +14,12 @@ public class Test_Movement : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 4500;
     [SerializeField] private float moveMaxSpeed = 20f;
-    [SerializeField] private float moveMinSpeed = 0.1f;
+    [SerializeField] private bool isStatic = true;
 
     [Header("Couter Movement")]
     [SerializeField] private float counterMovementRate = 0.175f;
+    [SerializeField] private float staticDesacellerationTime = 0.35f;
+    private float _staticTime = 0f;
 
     [Header("Jump")]
     [SerializeField] private float gravityMultiplier = 1f;
@@ -35,9 +37,7 @@ public class Test_Movement : MonoBehaviour
     private void Update()
     {
         GetInputs();
-        Vector3 coisa = new Vector3();
-        coisa.Normalize();
-        Debug.Log(coisa);
+        StaticStop();
     }
 
     private void FixedUpdate()
@@ -53,6 +53,22 @@ public class Test_Movement : MonoBehaviour
             Jump();
     }
 
+    private Vector3 _staticStartVelocity;
+    void StaticStop()
+    {
+        if(!(isStatic = keyboard == new Vector2()) || isJumping)
+        {
+            _staticTime = 0;
+            return;
+        }
+
+        if(_staticTime == 0)
+            _staticStartVelocity = rb.velocity;
+
+        _staticTime += Time.deltaTime;
+        rb.velocity = Vector3.Lerp(_staticStartVelocity, new Vector3(0, rb.velocity.y, 0), Mathf.Clamp(_staticTime / staticDesacellerationTime, 0, 1));
+    }
+
     void Jump()
     {
         Vector3 planeOrientationForward = orientation.transform.forward * 0.1f;
@@ -64,14 +80,19 @@ public class Test_Movement : MonoBehaviour
 
     private void Move()
     {
+        // Extra gravity
+        rb.AddForce(Physics.gravity * gravityMultiplier);
+
+        // Needs input to continue
+        if (isStatic) return;
+
         // Get orientation without y
         Vector3 planeOrientationForward = RemoveYFromVector(orientation.transform.forward);
         Vector3 planeOrientationRight = RemoveYFromVector(orientation.transform.right);
 
-        //CounterMove();
-
-        // Extra gravity
-        rb.AddForce(Physics.gravity * gravityMultiplier);
+        // Work as friction
+        CounterMove();
+        
         // Foward
         rb.AddForce(planeOrientationForward * keyboard.y * moveSpeed);
         // Sideways
@@ -83,14 +104,17 @@ public class Test_Movement : MonoBehaviour
         if (isJumping) return;
 
         Vector3 moveDir = rb.velocity;
-        /*if (moveDir.magnitude < moveMinSpeed)
-        {
-            rb.velocity = new Vector3(0, rb.velocity.y, 0);
-            return;
-        }*/
+        Vector3 counterMove = -moveDir.normalized * moveSpeed * counterMovementRate;
 
-        moveDir.Normalize();
-        rb.AddForce(-moveDir * moveSpeed * counterMovementRate);
+        if(Math.Abs(moveDir.x * rb.mass / counterMove.x) < Time.fixedDeltaTime)
+            rb.velocity = new Vector3(0, rb.velocity.y, rb.velocity.z);
+        else
+            rb.AddForce(new Vector3(counterMove.x, 0, 0));
+
+        if (Math.Abs(moveDir.z * rb.mass / counterMove.z) < Time.fixedDeltaTime)
+            rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y, 0);
+        else
+            rb.AddForce(new Vector3(0, 0, counterMove.z));
     }
 
     Vector3 RemoveYFromVector(Vector3 vector)
