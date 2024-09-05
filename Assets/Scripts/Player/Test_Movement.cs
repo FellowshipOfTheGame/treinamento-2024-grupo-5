@@ -1,6 +1,7 @@
 // Some stupid rigidbody based movement by Dani
 
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class Test_Movement : MonoBehaviour
@@ -12,19 +13,24 @@ public class Test_Movement : MonoBehaviour
     [SerializeField] protected Transform body;
 
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 4500;
-    [SerializeField] private float moveMaxSpeed = 20f;
+    [SerializeField] private float moveSpeed = 50;
+    [SerializeField] private float moveMaxSpeed = 25f;
     [SerializeField] private bool isStatic = true;
 
     [Header("Couter Movement")]
-    [SerializeField] private float counterMovementRate = 0.175f;
+    [SerializeField] private float counterMovementRate = 0.3f;
     [SerializeField] private float staticDesacellerationTime = 0.35f;
     private float _staticTime = 0f;
 
     [Header("Jump")]
     [SerializeField] private float gravityMultiplier = 1f;
     [SerializeField] private float jumpForce = 20f;
-    [SerializeField] private bool isJumping = false;
+
+    [SerializeField] private bool isGrounded = false;
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private float changeIsGroundedStateDelay = 2f;
+    private Coroutine _cancellingGrounded;
+    [SerializeField] private Vector3 normalVector;
 
     [Header("Inputs")]
     [SerializeField] private Vector2 keyboard;
@@ -46,27 +52,14 @@ public class Test_Movement : MonoBehaviour
     }
     void GetInputs()
     {
+        // Movement
         keyboard.x = Input.GetAxisRaw("Horizontal");
         keyboard.y = Input.GetAxisRaw("Vertical");
         keyboard.Normalize();
-        if (Input.GetKeyDown(KeyCode.Space))
+
+        // Jump
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
             Jump();
-    }
-
-    private Vector3 _staticStartVelocity;
-    void StaticStop()
-    {
-        if(!(isStatic = keyboard == new Vector2()) || isJumping)
-        {
-            _staticTime = 0;
-            return;
-        }
-
-        if(_staticTime == 0)
-            _staticStartVelocity = rb.velocity;
-
-        _staticTime += Time.deltaTime;
-        rb.velocity = Vector3.Lerp(_staticStartVelocity, new Vector3(0, rb.velocity.y, 0), Mathf.Clamp(_staticTime / staticDesacellerationTime, 0, 1));
     }
 
     void Jump()
@@ -74,9 +67,28 @@ public class Test_Movement : MonoBehaviour
         Vector3 planeOrientationForward = orientation.transform.forward * 0.1f;
         planeOrientationForward.y = 0;
         rb.AddForce((body.transform.up + planeOrientationForward) * jumpForce, ForceMode.Impulse);
+        rb.AddForce(normalVector * 0.5f * jumpForce, ForceMode.Impulse);
     }
 
     #region Movement
+
+    private Vector3 _staticStartVelocity;
+    void StaticStop()
+    {
+        // Check if player is 'static-intetion'
+        if (!(isStatic = keyboard == new Vector2()) || !isGrounded)
+        {
+            _staticTime = 0;
+            return;
+        }
+
+        // Stop player logic
+        if (_staticTime == 0)
+            _staticStartVelocity = rb.velocity;
+
+        _staticTime += Time.deltaTime;
+        rb.velocity = Vector3.Lerp(_staticStartVelocity, new Vector3(0, rb.velocity.y, 0), Mathf.Clamp(_staticTime / staticDesacellerationTime, 0, 1));
+    }
 
     private void Move()
     {
@@ -97,11 +109,15 @@ public class Test_Movement : MonoBehaviour
         rb.AddForce(planeOrientationForward * keyboard.y * moveSpeed);
         // Sideways
         rb.AddForce(planeOrientationRight * keyboard.x * moveSpeed);
+
+        if (!isGrounded) return;
+
+        LimitSpeed();
     }
 
     void CounterMove()
     {
-        if (isJumping) return;
+        if (!isGrounded) return;
 
         Vector3 moveDir = rb.velocity;
         Vector3 counterMove = -moveDir.normalized * moveSpeed * counterMovementRate;
@@ -125,5 +141,49 @@ public class Test_Movement : MonoBehaviour
         vector *= magnitude;
         return vector;
     }
+
+    void LimitSpeed()
+    {
+        rb.velocity = new Vector3(
+            Mathf.Clamp(rb.velocity.x, -moveMaxSpeed, moveMaxSpeed), 
+            rb.velocity.y, 
+            Mathf.Clamp(rb.velocity.z, -moveMaxSpeed, moveMaxSpeed)
+        );
+    }
     #endregion
+
+    private void OnCollisionStay(Collision other)
+    {
+        // Make sure we are only checking for walkable layers
+        int layer = other.gameObject.layer;
+        if (groundLayer != (groundLayer | (1 << layer))) return;
+
+        // get if ground is working as a floor
+        for (int i = 0; i < other.contactCount; i++)
+        {
+            Vector3 normal = other.contacts[i].normal;
+            if (IsFloor(normal))
+            {
+                isGrounded = true;
+                normalVector = normal;
+                if (_cancellingGrounded != null)
+                    StopCoroutine(_cancellingGrounded);
+            }
+        }
+
+        // Invoke ground/wall cancel, since we can't check normals with CollisionExit
+        _cancellingGrounded = StartCoroutine(ChangeIsGroundedState(changeIsGroundedStateDelay, false));
+    }
+
+    bool IsFloor(Vector3 v)
+    {
+        float angle = Vector3.Angle(Vector3.up, v);
+        return angle < 75;
+    }
+
+    IEnumerator ChangeIsGroundedState(float delay, bool newState)
+    {
+        yield return new WaitForSeconds(delay);
+        isGrounded = newState;
+    }
 }
