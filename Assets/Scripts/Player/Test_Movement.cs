@@ -36,6 +36,7 @@ public class Test_Movement : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
     [SerializeField] protected Transform body;
+    [SerializeField] protected Transform foot;
 
     [Header("Ground Movemnent")]
     [SerializeField] private float groundMoveSpeed = 10;
@@ -46,15 +47,16 @@ public class Test_Movement : MonoBehaviour
     [SerializeField] private InterpolatedFloat staticDesacellerationTime = new(1, 0.35f);
 
     [Header("Air Movement")]
-    [SerializeField] private float airMoveSpeed = 50;
-
-    // Counter movement
-    [SerializeField] private float counterMovementRate = 0.3f;
+    [SerializeField] private float airMoveSpeed = 20;
 
     [Header("Jump")]
     // Forces
     [SerializeField] private float gravityMultiplier = 1f;
+    [Range(0, 1)]
+    [SerializeField] private float gravityPercentWhileJumping = 0.75f;
     [SerializeField] private float jumpForce = 20f;
+    [SerializeField] private bool isJumping = false;
+    [SerializeField] private bool canJump = false;
 
     // Checks
     [SerializeField] private bool isGrounded = false;
@@ -62,6 +64,8 @@ public class Test_Movement : MonoBehaviour
     [SerializeField] private float changeIsGroundedStateDelay = 2f;
     private Coroutine _cancellingGrounded;
     [SerializeField] private Vector3 normalVector;
+    // Pre-groud sphere
+    [SerializeField] private float preGroundSphereRadius = 0.5f;
 
     [Header("Inputs")]
     [SerializeField] private Vector2 keyboard;
@@ -81,26 +85,8 @@ public class Test_Movement : MonoBehaviour
     {
         GetInputs();
         GetOrientation();
-
-        // Check if player is 'static-intetion'
-        if (isGrounded)
-        {
-            if (!(isStatic = keyboard == Vector2.zero))
-            {
-                staticDesacellerationTime.Reset();
-                GroundMove();
-            }
-            else
-            {
-                groundMoveTime.Reset();
-                StaticStop();
-            }
-        }
-        
-        Vector2 _planeVel = new Vector2(rb.velocity.x, rb.velocity.z);
-        float beta = (_planeOrientationRight.x * _planeVel.y - _planeOrientationRight.y * _planeVel.x) / (_planeOrientationRight.x * _planeOrientationForward.y - _planeOrientationRight.y * _planeOrientationForward.x);
-        float alpha = (_planeVel.x - beta * _planeOrientationForward.x) / _planeVel.x;
-        A = new Vector2(alpha, beta);
+        GroundMoveManagement();
+        JumpManagement();
     }
 
     void FixedUpdate()
@@ -116,7 +102,7 @@ public class Test_Movement : MonoBehaviour
         keyboard.Normalize();
 
         // Jump
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && canJump)
             Jump();
     }
 
@@ -125,22 +111,29 @@ public class Test_Movement : MonoBehaviour
         // Get orientation without y
         _planeOrientationForward = RemoveYFromVector(orientation.transform.forward);
         _planeOrientationRight = RemoveYFromVector(orientation.transform.right);
-
     }
-
-    #region Jump
-
-    void Jump()
-    {
-        rb.AddForce(body.transform.up * jumpForce, ForceMode.Impulse);
-        rb.AddForce(normalVector * 0.5f * jumpForce, ForceMode.Impulse);
-    }
-
-    void Gravity() => rb.AddForce(Physics.gravity * gravityMultiplier);
-
-    #endregion
 
     #region GroundMovement
+
+    void GroundMoveManagement()
+    {
+        isStatic = keyboard == Vector2.zero;
+
+        // Check if player is 'static-intetion'
+        if (isGrounded)
+        {
+            if (!isStatic)
+            {
+                staticDesacellerationTime.Reset();
+                GroundMove();
+            }
+            else
+            {
+                groundMoveTime.Reset();
+                StaticStop();
+            }
+        }
+    }
 
     void GroundMove()
     {
@@ -163,39 +156,60 @@ public class Test_Movement : MonoBehaviour
 
     #endregion
 
+    #region Jump
+
+    void JumpManagement()
+    {
+        isJumping = IsJumping();
+        canJump = isGrounded || CollidersCointainsGround(Physics.OverlapSphere(foot.position, preGroundSphereRadius));
+    }
+
+    bool CollidersCointainsGround(Collider[] colliders)
+    {
+        foreach (Collider c in colliders)
+        {
+            if (IsGroundLayer(c.gameObject.layer))
+                return true;
+        }
+        return false;
+    }
+
+    void Jump()
+    {
+        rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, 0, Mathf.Infinity), rb.velocity.z);
+        rb.AddForce(body.transform.up * jumpForce, ForceMode.Impulse);
+        rb.AddForce(normalVector * 0.5f * jumpForce, ForceMode.Impulse);
+    }
+
+    bool IsJumping() => (rb.velocity.y > 0 && Input.GetKey(KeyCode.Space) && !isGrounded);
+
+    void DrawPreGroundSphere()
+    {
+        if(foot == null) return;
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(foot.position, preGroundSphereRadius);
+    }
+
+    void Gravity()
+    {
+        if(isJumping)
+            rb.AddForce(Physics.gravity * gravityMultiplier * gravityPercentWhileJumping);
+        else 
+            rb.AddForce(Physics.gravity * gravityMultiplier);
+    }
+
+    #endregion
+
+   
     #region AirMovement
     private void AirMove()
     {
         if (isGrounded) return;
-
-        // Needs input to continue
-        if (isStatic) return;
-
-        // Work as friction
-        CounterMove();
         
         // Foward
         rb.AddForce(_planeOrientationForward * keyboard.y * airMoveSpeed);
         // Sideways
-        rb.AddForce(_planeOrientationRight * keyboard.x * airMoveSpeed * 0.4f);
-    }
-    
-    void CounterMove()
-    {
-        if (!isGrounded) return;
-
-        Vector3 moveDir = rb.velocity;
-        Vector3 counterMove = -moveDir.normalized * airMoveSpeed * counterMovementRate;
-
-        if (Math.Abs(moveDir.x * rb.mass / counterMove.x) < Time.fixedDeltaTime)
-            rb.velocity = new Vector3(0, rb.velocity.y, rb.velocity.z);
-        else
-            rb.AddForce(new Vector3(counterMove.x, 0, 0));
-
-        if (Math.Abs(moveDir.z * rb.mass / counterMove.z) < Time.fixedDeltaTime)
-            rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y, 0);
-        else
-            rb.AddForce(new Vector3(0, 0, counterMove.z));
+        rb.AddForce(_planeOrientationRight * keyboard.x * airMoveSpeed);
     }
 
     Vector3 RemoveYFromVector(Vector3 vector)
@@ -213,7 +227,7 @@ public class Test_Movement : MonoBehaviour
     {
         // Make sure we are only checking for walkable layers
         int layer = other.gameObject.layer;
-        if (groundLayer != (groundLayer | (1 << layer))) return;
+        if (!IsGroundLayer(layer)) return;
 
         // get if ground is working as a floor
         for (int i = 0; i < other.contactCount; i++)
@@ -232,6 +246,8 @@ public class Test_Movement : MonoBehaviour
         _cancellingGrounded = StartCoroutine(ChangeIsGroundedState(changeIsGroundedStateDelay, false));
     }
 
+    bool IsGroundLayer(int layer) => groundLayer == (groundLayer | (1 << layer));
+
     bool IsFloor(Vector3 v)
     {
         float angle = Vector3.Angle(Vector3.up, v);
@@ -242,5 +258,10 @@ public class Test_Movement : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         isGrounded = newState;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        DrawPreGroundSphere();
     }
 }
