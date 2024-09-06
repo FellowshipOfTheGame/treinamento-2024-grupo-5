@@ -12,7 +12,7 @@ public class FirstPerson : MonoBehaviour
     [Header("Options")] 
     [SerializeField] private float horizontalSense = 1;
     [SerializeField] private float verticalSense = 1;
-    [SerializeField] private int fov = 100;
+    //[SerializeField] private int fov = 100;
     // bool invert_y_axis
     
     private float _xRotation = 0f;

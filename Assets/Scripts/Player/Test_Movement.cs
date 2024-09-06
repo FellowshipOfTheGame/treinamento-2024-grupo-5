@@ -1,31 +1,62 @@
-// Some stupid rigidbody based movement by Dani
-
 using System;
 using System.Collections;
 using UnityEngine;
 
 public class Test_Movement : MonoBehaviour
 {
+    [Serializable]
+    private class InterpolatedFloat
+    {
+        [SerializeField] protected float startValue;
+        [SerializeField] private float target;
+        private float _time;
+        [SerializeField] private float duration;
+
+        public InterpolatedFloat(float target, float duration, float startValue = 0)
+        {
+            this.startValue = startValue;
+            SetTarget(target);
+            this.duration = duration;
+        }
+
+        public void Update(float time) => _time += time;
+
+        public void SetTarget(float target)
+        {
+            this.target = target;
+            _time = 0;
+        }
+
+        public void Reset() => _time = 0;
+
+        public float GetValue() => Mathf.Lerp(startValue, target, _time / duration);
+    }
 
     [Header("Components")]
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
     [SerializeField] protected Transform body;
 
-    [Header("Movement")]
-    [SerializeField] private float moveSpeed = 50;
-    [SerializeField] private float moveMaxSpeed = 25f;
-    [SerializeField] private bool isStatic = true;
+    [Header("Ground Movemnent")]
+    [SerializeField] private float groundMoveSpeed = 10;
+    [SerializeField] private InterpolatedFloat groundMoveTime = new(1, 0.2f);
 
-    [Header("Couter Movement")]
+    // Counter movement
+    [SerializeField] private bool isStatic = true;
+    [SerializeField] private InterpolatedFloat staticDesacellerationTime = new(1, 0.35f);
+
+    [Header("Air Movement")]
+    [SerializeField] private float airMoveSpeed = 50;
+
+    // Counter movement
     [SerializeField] private float counterMovementRate = 0.3f;
-    [SerializeField] private float staticDesacellerationTime = 0.35f;
-    private float _staticTime = 0f;
 
     [Header("Jump")]
+    // Forces
     [SerializeField] private float gravityMultiplier = 1f;
     [SerializeField] private float jumpForce = 20f;
 
+    // Checks
     [SerializeField] private bool isGrounded = false;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float changeIsGroundedStateDelay = 2f;
@@ -35,20 +66,47 @@ public class Test_Movement : MonoBehaviour
     [Header("Inputs")]
     [SerializeField] private Vector2 keyboard;
 
+    [Header("Orientation")]
+    // tirar [SerializeField] private depois
+    [SerializeField] private Vector3 _planeOrientationForward;
+    [SerializeField] private Vector3 _planeOrientationRight;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
     }
 
+    public Vector2 A;
     private void Update()
     {
         GetInputs();
-        StaticStop();
+        GetOrientation();
+
+        // Check if player is 'static-intetion'
+        if (isGrounded)
+        {
+            if (!(isStatic = keyboard == Vector2.zero))
+            {
+                staticDesacellerationTime.Reset();
+                GroundMove();
+            }
+            else
+            {
+                groundMoveTime.Reset();
+                StaticStop();
+            }
+        }
+        
+        Vector2 _planeVel = new Vector2(rb.velocity.x, rb.velocity.z);
+        float beta = (_planeOrientationRight.x * _planeVel.y - _planeOrientationRight.y * _planeVel.x) / (_planeOrientationRight.x * _planeOrientationForward.y - _planeOrientationRight.y * _planeOrientationForward.x);
+        float alpha = (_planeVel.x - beta * _planeOrientationForward.x) / _planeVel.x;
+        A = new Vector2(alpha, beta);
     }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
-        Move();
+        Gravity();
+        AirMove();
     }
     void GetInputs()
     {
@@ -62,67 +120,74 @@ public class Test_Movement : MonoBehaviour
             Jump();
     }
 
+    void GetOrientation()
+    {
+        // Get orientation without y
+        _planeOrientationForward = RemoveYFromVector(orientation.transform.forward);
+        _planeOrientationRight = RemoveYFromVector(orientation.transform.right);
+
+    }
+
+    #region Jump
+
     void Jump()
     {
-        Vector3 planeOrientationForward = orientation.transform.forward * 0.1f;
-        planeOrientationForward.y = 0;
-        rb.AddForce((body.transform.up + planeOrientationForward) * jumpForce, ForceMode.Impulse);
+        rb.AddForce(body.transform.up * jumpForce, ForceMode.Impulse);
         rb.AddForce(normalVector * 0.5f * jumpForce, ForceMode.Impulse);
     }
 
-    #region Movement
+    void Gravity() => rb.AddForce(Physics.gravity * gravityMultiplier);
+
+    #endregion
+
+    #region GroundMovement
+
+    void GroundMove()
+    {
+        groundMoveTime.Update(Time.deltaTime);
+        Vector3 maxVelocity = (_planeOrientationForward * keyboard.y + _planeOrientationRight * keyboard.x) * groundMoveSpeed;
+        Vector3 moveVelocity = Vector3.Lerp(Vector3.zero, maxVelocity, groundMoveTime.GetValue());
+        rb.velocity = moveVelocity + new Vector3(0, rb.velocity.y, 0);
+    }
 
     private Vector3 _staticStartVelocity;
     void StaticStop()
     {
-        // Check if player is 'static-intetion'
-        if (!(isStatic = keyboard == new Vector2()) || !isGrounded)
-        {
-            _staticTime = 0;
-            return;
-        }
-
         // Stop player logic
-        if (_staticTime == 0)
+        if (staticDesacellerationTime.GetValue() == 0)
             _staticStartVelocity = rb.velocity;
 
-        _staticTime += Time.deltaTime;
-        rb.velocity = Vector3.Lerp(_staticStartVelocity, new Vector3(0, rb.velocity.y, 0), Mathf.Clamp(_staticTime / staticDesacellerationTime, 0, 1));
+        staticDesacellerationTime.Update(Time.deltaTime);
+        rb.velocity = Vector3.Lerp(_staticStartVelocity, new Vector3(0, rb.velocity.y, 0), staticDesacellerationTime.GetValue());
     }
 
-    private void Move()
+    #endregion
+
+    #region AirMovement
+    private void AirMove()
     {
-        // Extra gravity
-        rb.AddForce(Physics.gravity * gravityMultiplier);
+        if (isGrounded) return;
 
         // Needs input to continue
         if (isStatic) return;
-
-        // Get orientation without y
-        Vector3 planeOrientationForward = RemoveYFromVector(orientation.transform.forward);
-        Vector3 planeOrientationRight = RemoveYFromVector(orientation.transform.right);
 
         // Work as friction
         CounterMove();
         
         // Foward
-        rb.AddForce(planeOrientationForward * keyboard.y * moveSpeed);
+        rb.AddForce(_planeOrientationForward * keyboard.y * airMoveSpeed);
         // Sideways
-        rb.AddForce(planeOrientationRight * keyboard.x * moveSpeed);
-
-        if (!isGrounded) return;
-
-        LimitSpeed();
+        rb.AddForce(_planeOrientationRight * keyboard.x * airMoveSpeed * 0.4f);
     }
-
+    
     void CounterMove()
     {
         if (!isGrounded) return;
 
         Vector3 moveDir = rb.velocity;
-        Vector3 counterMove = -moveDir.normalized * moveSpeed * counterMovementRate;
+        Vector3 counterMove = -moveDir.normalized * airMoveSpeed * counterMovementRate;
 
-        if(Math.Abs(moveDir.x * rb.mass / counterMove.x) < Time.fixedDeltaTime)
+        if (Math.Abs(moveDir.x * rb.mass / counterMove.x) < Time.fixedDeltaTime)
             rb.velocity = new Vector3(0, rb.velocity.y, rb.velocity.z);
         else
             rb.AddForce(new Vector3(counterMove.x, 0, 0));
@@ -141,17 +206,9 @@ public class Test_Movement : MonoBehaviour
         vector *= magnitude;
         return vector;
     }
-
-    void LimitSpeed()
-    {
-        rb.velocity = new Vector3(
-            Mathf.Clamp(rb.velocity.x, -moveMaxSpeed, moveMaxSpeed), 
-            rb.velocity.y, 
-            Mathf.Clamp(rb.velocity.z, -moveMaxSpeed, moveMaxSpeed)
-        );
-    }
     #endregion
 
+    
     private void OnCollisionStay(Collision other)
     {
         // Make sure we are only checking for walkable layers
