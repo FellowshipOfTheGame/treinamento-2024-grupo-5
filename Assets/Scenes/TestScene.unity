@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 36373506}
   - component: {fileID: 36373505}
   m_Layer: 0
-  m_Name: Test_Player
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -228,6 +228,11 @@ MonoBehaviour:
     target: 0
     duration: 0.2
   cameraTargetZRotation: 3
+  fovChangeEffect:
+    startValue: 60
+    target: 80
+    duration: 0.3
+  targetFOV: 80
 --- !u!1 &39904384
 GameObject:
   m_ObjectHideFlags: 0
@@ -2802,12 +2807,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4dfaf86f607b6046ab6e4ec9eb809ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  firstPersonCamera: {fileID: 0}
   playerBody: {fileID: 1244851272}
   playerHead: {fileID: 901898051}
   horizontalSense: 1
   verticalSense: 1
+  baseFOV: 60
   _zRotation: 0
-  t: 0
 --- !u!1 &1069343893
 GameObject:
   m_ObjectHideFlags: 0

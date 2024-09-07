@@ -51,8 +51,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float dashStateDuration = 0.2f;
 
     [Header("Camera Effects")]
+    // Rotation
     [SerializeField] private InterpolatedFloat cameraZRotationEffect = new(0, 0.2f);
     [SerializeField] private float cameraTargetZRotation = 3;
+    // FOV
+    [SerializeField] private InterpolatedFloat fovChangeEffect = new(100f, 1f, 60f);
+    [SerializeField] private float targetFOV = 110;
 
     [Header("Inputs")]
     private Vector2 _keyboard;
@@ -68,6 +72,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (firstPerson == null)
             Generics.ReallyTryGetComponent(gameObject, out firstPerson);
+        fovChangeEffect.SetStartValue(firstPerson.baseFOV);
     }
 
     private void Update()
@@ -77,6 +82,7 @@ public class PlayerMovement : MonoBehaviour
         GroundMoveManagement();
         JumpManagement();
         RotateCameraEffect();
+        FOVCameraEffect();
     }
 
     void FixedUpdate()
@@ -261,6 +267,32 @@ public class PlayerMovement : MonoBehaviour
 
         cameraZRotationEffect.Update(Time.deltaTime);
         firstPerson.SetZRotation(cameraZRotationEffect.GetValue());
+    }
+
+    bool _lastGoingFoward;
+    void FOVCameraEffect()
+    {
+        bool GoingFoward(float v)
+        {
+            return v > 0;
+        }
+
+        bool goingFoward = GoingFoward(Generics.Sign(_keyboard.y));
+
+        // Mudar para uma projecao de velocity em foward
+        if (goingFoward != _lastGoingFoward)
+        {
+            _lastGoingFoward = goingFoward;
+            fovChangeEffect.SetStartValue(fovChangeEffect.GetValue());
+            if (goingFoward)
+                fovChangeEffect.SetTarget(targetFOV);
+            else
+                fovChangeEffect.SetTarget(firstPerson.baseFOV);
+            fovChangeEffect.Reset();
+        }
+
+        fovChangeEffect.Update(Time.deltaTime);
+        firstPerson.SetFOV(fovChangeEffect.GetValue());
     }
 
     #endregion

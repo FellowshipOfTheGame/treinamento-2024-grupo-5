@@ -37,6 +37,8 @@ namespace Mantega
         public float GetStartValue() => startValue;
 
         public float SetStartValue(float value) => startValue = value;
+
+        public float GetTime() => _time;
     }
 
     public static class Generics
