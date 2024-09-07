@@ -1,92 +1,82 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using Mantega;
 
-public class Test_Movement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
-    [Serializable]
-    private class InterpolatedFloat
-    {
-        [SerializeField] protected float startValue;
-        [SerializeField] private float target;
-        private float _time;
-        [SerializeField] private float duration;
-
-        public InterpolatedFloat(float target, float duration, float startValue = 0)
-        {
-            this.startValue = startValue;
-            SetTarget(target);
-            this.duration = duration;
-        }
-
-        public void Update(float time) => _time += time;
-
-        public void SetTarget(float target)
-        {
-            this.target = target;
-            _time = 0;
-        }
-
-        public void Reset() => _time = 0;
-
-        public float GetValue() => Mathf.Lerp(startValue, target, _time / duration);
-    }
-
     [Header("Components")]
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
     [SerializeField] protected Transform body;
     [SerializeField] protected Transform foot;
+    [SerializeField] private FirstPerson firstPerson;
 
     [Header("Ground Movemnent")]
     [SerializeField] private float groundMoveSpeed = 10;
     [SerializeField] private InterpolatedFloat groundMoveTime = new(1, 0.2f);
 
     // Counter movement
-    [SerializeField] private bool isStatic = true;
+    private bool _isStatic = true;
     [SerializeField] private InterpolatedFloat staticDesacellerationTime = new(1, 0.35f);
 
     [Header("Air Movement")]
-    [SerializeField] private float airMoveSpeed = 20;
+    [SerializeField] private float airMoveSpeed = 15;
 
     [Header("Jump")]
     // Forces
-    [SerializeField] private float gravityMultiplier = 1f;
+    [SerializeField] private float gravityMultiplier = 1;
     [Range(0, 1)]
     [SerializeField] private float gravityPercentWhileJumping = 0.75f;
-    [SerializeField] private float jumpForce = 20f;
-    [SerializeField] private bool isJumping = false;
-    [SerializeField] private bool canJump = false;
+    [SerializeField] private float jumpForce = 15;
+    private bool _isJumping = false;
+    private bool _canJump = false;
 
     // Checks
-    [SerializeField] private bool isGrounded = false;
+    private bool _isGrounded = false;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private float changeIsGroundedStateDelay = 2f;
+    [SerializeField] private float changeIsGroundedStateDelay = 0.1f;
     private Coroutine _cancellingGrounded;
-    [SerializeField] private Vector3 normalVector;
+    private Vector3 _normalVector;
     // Pre-groud sphere
     [SerializeField] private float preGroundSphereRadius = 0.5f;
 
+    [Header("Dash")]
+    [SerializeField] private float dashForce = 15;
+    [SerializeField] private float dashCooldown = 1;
+    [SerializeField] private bool canDash = true;
+
+    // Slide while dashing
+    [SerializeField] private bool dashState = false;
+    [SerializeField] private float dashStateDuration = 0.2f;
+
+    [Header("Camera Effects")]
+    [SerializeField] private InterpolatedFloat cameraZRotationEffect = new(0, 0.2f);
+    [SerializeField] private float cameraTargetZRotation = 3;
+
     [Header("Inputs")]
-    [SerializeField] private Vector2 keyboard;
+    private Vector2 _keyboard;
 
     [Header("Orientation")]
-    // tirar [SerializeField] private depois
-    [SerializeField] private Vector3 _planeOrientationForward;
-    [SerializeField] private Vector3 _planeOrientationRight;
+    private Vector3 _planeOrientationForward;
+    private Vector3 _planeOrientationRight;
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        if(rb == null)
+            Generics.ReallyTryGetComponent(gameObject, out rb);
+
+        if (firstPerson == null)
+            Generics.ReallyTryGetComponent(gameObject, out firstPerson);
     }
 
-    public Vector2 A;
     private void Update()
     {
         GetInputs();
         GetOrientation();
         GroundMoveManagement();
         JumpManagement();
+        RotateCameraEffect();
     }
 
     void FixedUpdate()
@@ -94,16 +84,21 @@ public class Test_Movement : MonoBehaviour
         Gravity();
         AirMove();
     }
+
     void GetInputs()
     {
         // Movement
-        keyboard.x = Input.GetAxisRaw("Horizontal");
-        keyboard.y = Input.GetAxisRaw("Vertical");
-        keyboard.Normalize();
+        _keyboard.x = Input.GetAxisRaw("Horizontal");
+        _keyboard.y = Input.GetAxisRaw("Vertical");
+        _keyboard.Normalize();
 
         // Jump
-        if (Input.GetKeyDown(KeyCode.Space) && canJump)
+        if (Input.GetKeyDown(KeyCode.Space) && _canJump)
             Jump();
+
+        // Dash
+        if(Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+            Dash();
     }
 
     void GetOrientation()
@@ -117,17 +112,18 @@ public class Test_Movement : MonoBehaviour
 
     void GroundMoveManagement()
     {
-        isStatic = keyboard == Vector2.zero;
+        _isStatic = _keyboard == Vector2.zero;
 
         // Check if player is 'static-intetion'
-        if (isGrounded)
+        if (_isGrounded)
         {
-            if (!isStatic)
+            if (!_isStatic)
             {
                 staticDesacellerationTime.Reset();
+                staticDesacellerationTime.SetDuration(_stopDefaultDuration);
                 GroundMove();
             }
-            else
+            else if(!dashState)
             {
                 groundMoveTime.Reset();
                 StaticStop();
@@ -138,21 +134,31 @@ public class Test_Movement : MonoBehaviour
     void GroundMove()
     {
         groundMoveTime.Update(Time.deltaTime);
-        Vector3 maxVelocity = (_planeOrientationForward * keyboard.y + _planeOrientationRight * keyboard.x) * groundMoveSpeed;
+        Vector3 maxVelocity = (_planeOrientationForward * _keyboard.y + _planeOrientationRight * _keyboard.x) * groundMoveSpeed;
         Vector3 moveVelocity = Vector3.Lerp(Vector3.zero, maxVelocity, groundMoveTime.GetValue());
         rb.velocity = moveVelocity + new Vector3(0, rb.velocity.y, 0);
     }
 
     private Vector3 _staticStartVelocity;
+    private float _stopExtraDuration;
+    private float _stopDefaultDuration;
     void StaticStop()
     {
         // Stop player logic
         if (staticDesacellerationTime.GetValue() == 0)
+        {
             _staticStartVelocity = rb.velocity;
+
+            _stopDefaultDuration = staticDesacellerationTime.GetDuration();
+            _stopExtraDuration = GetStopExtraTime(rb.velocity.magnitude);
+            staticDesacellerationTime.SetDuration(_stopDefaultDuration + _stopExtraDuration);
+        }
 
         staticDesacellerationTime.Update(Time.deltaTime);
         rb.velocity = Vector3.Lerp(_staticStartVelocity, new Vector3(0, rb.velocity.y, 0), staticDesacellerationTime.GetValue());
     }
+
+    float GetStopExtraTime(float x) => (4 / (1 + Mathf.Pow((float) Math.E, (float) -0.08 * (x - 60))));
 
     #endregion
 
@@ -160,8 +166,8 @@ public class Test_Movement : MonoBehaviour
 
     void JumpManagement()
     {
-        isJumping = IsJumping();
-        canJump = isGrounded || CollidersCointainsGround(Physics.OverlapSphere(foot.position, preGroundSphereRadius));
+        _isJumping = IsJumping();
+        _canJump = _isGrounded || CollidersCointainsGround(Physics.OverlapSphere(foot.position, preGroundSphereRadius));
     }
 
     bool CollidersCointainsGround(Collider[] colliders)
@@ -178,10 +184,10 @@ public class Test_Movement : MonoBehaviour
     {
         rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, 0, Mathf.Infinity), rb.velocity.z);
         rb.AddForce(body.transform.up * jumpForce, ForceMode.Impulse);
-        rb.AddForce(normalVector * 0.5f * jumpForce, ForceMode.Impulse);
+        rb.AddForce(_normalVector * 0.5f * jumpForce, ForceMode.Impulse);
     }
 
-    bool IsJumping() => (rb.velocity.y > 0 && Input.GetKey(KeyCode.Space) && !isGrounded);
+    bool IsJumping() => (rb.velocity.y > 0 && Input.GetKey(KeyCode.Space) && !_isGrounded);
 
     void DrawPreGroundSphere()
     {
@@ -192,7 +198,7 @@ public class Test_Movement : MonoBehaviour
 
     void Gravity()
     {
-        if(isJumping)
+        if(_isJumping)
             rb.AddForce(Physics.gravity * gravityMultiplier * gravityPercentWhileJumping);
         else 
             rb.AddForce(Physics.gravity * gravityMultiplier);
@@ -200,16 +206,15 @@ public class Test_Movement : MonoBehaviour
 
     #endregion
 
-   
     #region AirMovement
     private void AirMove()
     {
-        if (isGrounded) return;
+        if (_isGrounded) return;
         
         // Foward
-        rb.AddForce(_planeOrientationForward * keyboard.y * airMoveSpeed);
+        rb.AddForce(_planeOrientationForward * _keyboard.y * airMoveSpeed);
         // Sideways
-        rb.AddForce(_planeOrientationRight * keyboard.x * airMoveSpeed);
+        rb.AddForce(_planeOrientationRight * _keyboard.x * airMoveSpeed);
     }
 
     Vector3 RemoveYFromVector(Vector3 vector)
@@ -222,7 +227,45 @@ public class Test_Movement : MonoBehaviour
     }
     #endregion
 
-    
+    #region Dash
+
+    public void Dash()
+    {
+        Vector3 foward = orientation.transform.forward;
+        rb.velocity = new Vector3(foward.x, foward.y * 1.5f, foward.z) * rb.velocity.magnitude;
+        rb.AddForce(foward * dashForce, ForceMode.Impulse);
+        canDash = false;
+        dashState = true;
+        Invoke(nameof(ExitDashState), dashStateDuration);
+        Invoke(nameof(EnableDash), dashCooldown);
+    }
+
+    void EnableDash() => canDash = true;
+
+    void ExitDashState() => dashState = false;
+
+    #endregion
+
+    #region Effects
+
+    void RotateCameraEffect()
+    {
+        float target = Generics.Sign(_keyboard.x) * -cameraTargetZRotation;
+        // Check if Change target
+        if(target != cameraZRotationEffect.GetTarget())
+        {
+            cameraZRotationEffect.SetStartValue(cameraZRotationEffect.GetValue());
+            cameraZRotationEffect.SetTarget(target);
+            cameraZRotationEffect.Reset();
+        }
+
+        cameraZRotationEffect.Update(Time.deltaTime);
+        firstPerson.SetZRotation(cameraZRotationEffect.GetValue());
+    }
+
+    #endregion
+
+    #region Collision
     private void OnCollisionStay(Collision other)
     {
         // Make sure we are only checking for walkable layers
@@ -235,8 +278,8 @@ public class Test_Movement : MonoBehaviour
             Vector3 normal = other.contacts[i].normal;
             if (IsFloor(normal))
             {
-                isGrounded = true;
-                normalVector = normal;
+                _isGrounded = true;
+                _normalVector = normal;
                 if (_cancellingGrounded != null)
                     StopCoroutine(_cancellingGrounded);
             }
@@ -257,11 +300,14 @@ public class Test_Movement : MonoBehaviour
     IEnumerator ChangeIsGroundedState(float delay, bool newState)
     {
         yield return new WaitForSeconds(delay);
-        isGrounded = newState;
+        _isGrounded = newState;
     }
+
+    #endregion
 
     void OnDrawGizmosSelected()
     {
         DrawPreGroundSphere();
     }
 }
+
