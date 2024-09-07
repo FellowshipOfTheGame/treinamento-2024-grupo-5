@@ -55,8 +55,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private InterpolatedFloat cameraZRotationEffect = new(0, 0.2f);
     [SerializeField] private float cameraTargetZRotation = 3;
     // FOV
-    [SerializeField] private InterpolatedFloat fovChangeEffect = new(100f, 1f, 60f);
-    [SerializeField] private float targetFOV = 110;
+    [SerializeField] private InterpolatedFloat fovChangeEffect = new(50f, 0.2f, 70f);
+    [SerializeField] private float fovChangeEffectDashTarget = 50;
 
     [Header("Inputs")]
     private Vector2 _keyboard;
@@ -73,7 +73,10 @@ public class PlayerMovement : MonoBehaviour
         if (firstPerson == null)
             Generics.ReallyTryGetComponent(gameObject, out firstPerson);
         fovChangeEffect.SetStartValue(firstPerson.baseFOV);
+        _fovChangeEffectDefaultDuration = fovChangeEffect.GetDuration();
     }
+
+    public Vector2 A = new();
 
     private void Update()
     {
@@ -113,6 +116,15 @@ public class PlayerMovement : MonoBehaviour
         _planeOrientationForward = RemoveYFromVector(orientation.transform.forward);
         _planeOrientationRight = RemoveYFromVector(orientation.transform.right);
     }
+    
+    Vector2 GetCordinatesRelativeToOrientation(Vector2 v)
+    {
+        Vector2 X = new Vector2(_planeOrientationRight.x, _planeOrientationRight.z);
+        Vector2 Y = new Vector2(_planeOrientationForward.x, _planeOrientationForward.z);
+        return Generics.ChangeVectorCordinates(v, X, Y);
+    }
+
+    Vector2 PlaneVelocityRelativeToOrientation() => GetCordinatesRelativeToOrientation(new Vector2(rb.velocity.x, rb.velocity.z));
 
     #region GroundMovement
 
@@ -269,28 +281,29 @@ public class PlayerMovement : MonoBehaviour
         firstPerson.SetZRotation(cameraZRotationEffect.GetValue());
     }
 
-    bool _lastGoingFoward;
+
+    private float _fovChangeEffectDefaultDuration;
     void FOVCameraEffect()
     {
-        bool GoingFoward(float v)
+        float newTarget;
+        if (dashState)
         {
-            return v > 0;
+            newTarget = fovChangeEffectDashTarget;
+            fovChangeEffect.SetDuration(_fovChangeEffectDefaultDuration);
+        }
+        else
+        {
+            newTarget = firstPerson.baseFOV;
+            fovChangeEffect.SetDuration(_fovChangeEffectDefaultDuration * 0.8f);
         }
 
-        bool goingFoward = GoingFoward(Generics.Sign(_keyboard.y));
-
-        // Mudar para uma projecao de velocity em foward
-        if (goingFoward != _lastGoingFoward)
+        if (fovChangeEffect.GetTarget() != newTarget)
         {
-            _lastGoingFoward = goingFoward;
             fovChangeEffect.SetStartValue(fovChangeEffect.GetValue());
-            if (goingFoward)
-                fovChangeEffect.SetTarget(targetFOV);
-            else
-                fovChangeEffect.SetTarget(firstPerson.baseFOV);
+            fovChangeEffect.SetTarget(newTarget);
             fovChangeEffect.Reset();
         }
-
+            
         fovChangeEffect.Update(Time.deltaTime);
         firstPerson.SetFOV(fovChangeEffect.GetValue());
     }

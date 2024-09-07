@@ -222,17 +222,18 @@ MonoBehaviour:
   dashCooldown: 1
   canDash: 1
   dashState: 0
-  dashStateDuration: 0.2
+  dashStateDuration: 0.3
   cameraZRotationEffect:
     startValue: 0
     target: 0
     duration: 0.2
   cameraTargetZRotation: 3
   fovChangeEffect:
-    startValue: 60
-    target: 80
+    startValue: 70
+    target: 50
     duration: 0.3
-  targetFOV: 80
+  fovChangeEffectDashTarget: 60
+  A: {x: 0, y: 0}
 --- !u!1 &39904384
 GameObject:
   m_ObjectHideFlags: 0
@@ -2812,7 +2813,7 @@ MonoBehaviour:
   playerHead: {fileID: 901898051}
   horizontalSense: 1
   verticalSense: 1
-  baseFOV: 60
+  baseFOV: 70
   _zRotation: 0
 --- !u!1 &1069343893
 GameObject:

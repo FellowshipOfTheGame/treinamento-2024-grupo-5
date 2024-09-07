@@ -62,6 +62,13 @@ namespace Mantega
             return true;
         }
 
+        public static Vector2 ChangeVectorCordinates(Vector2 V, Vector2 X, Vector2 Y)
+        {
+            float alpha = (V.y * Y.x - V.x * Y.y) / (X.y * Y.x - X.x * Y.y);
+            float beta = (V.x - alpha * X.x) / Y.x;
+
+            return new Vector2(alpha, beta);
+        }
         public static int Sign(float value) => value > 0 ? 1 : value < 0 ? -1 : 0;
     }
 }
