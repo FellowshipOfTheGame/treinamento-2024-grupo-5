@@ -29,11 +29,11 @@ public class PlayerMovement : MonoBehaviour
     [Range(0, 1)]
     [SerializeField] private float gravityPercentWhileJumping = 0.75f;
     [SerializeField] private float jumpForce = 15;
-    private bool _isJumping = false;
-    private bool _canJump = false;
+    [SerializeField] private bool _isJumping = false;
+    [SerializeField] private bool _canJump = false;
 
     // Checks
-    private bool _isGrounded = false;
+    [SerializeField]  private bool _isGrounded = false;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float changeIsGroundedStateDelay = 0.1f;
     private Coroutine _cancellingGrounded;
@@ -69,14 +69,14 @@ public class PlayerMovement : MonoBehaviour
     {
         if(rb == null)
             Generics.ReallyTryGetComponent(gameObject, out rb);
+        _stopDefaultDuration = staticDesacellerationTime.GetDuration();
+        _groundMoveDefaultDuration = groundMoveTime.GetDuration();
 
         if (firstPerson == null)
             Generics.ReallyTryGetComponent(gameObject, out firstPerson);
         fovChangeEffect.SetStartValue(firstPerson.baseFOV);
         _fovChangeEffectDefaultDuration = fovChangeEffect.GetDuration();
     }
-
-    public Vector2 A = new();
 
     private void Update()
     {
@@ -138,7 +138,6 @@ public class PlayerMovement : MonoBehaviour
             if (!_isStatic)
             {
                 staticDesacellerationTime.Reset();
-                staticDesacellerationTime.SetDuration(_stopDefaultDuration);
                 GroundMove();
             }
             else if(!dashState)
@@ -147,15 +146,35 @@ public class PlayerMovement : MonoBehaviour
                 StaticStop();
             }
         }
+        else
+        {
+            staticDesacellerationTime.Reset();
+            groundMoveTime.Reset();
+        }
     }
 
+
+    Vector3 _startGroundMoveVelocity;
+    float _groundMoveDefaultDuration;
     void GroundMove()
     {
-        groundMoveTime.Update(Time.deltaTime);
+        if(groundMoveTime.GetValue() == 0)
+            StartGroundMove();
+
         Vector3 maxVelocity = (_planeOrientationForward * _keyboard.y + _planeOrientationRight * _keyboard.x) * groundMoveSpeed;
-        Vector3 moveVelocity = Vector3.Lerp(Vector3.zero, maxVelocity, groundMoveTime.GetValue());
+        groundMoveTime.Update(Time.deltaTime);
+        Vector3 moveVelocity = Vector3.Lerp(_startGroundMoveVelocity, maxVelocity, groundMoveTime.GetValue());
         rb.velocity = moveVelocity + new Vector3(0, rb.velocity.y, 0);
     }
+
+    void StartGroundMove()
+    {
+        _startGroundMoveVelocity = rb.velocity;
+        _startGroundMoveVelocity.y = 0;
+        groundMoveTime.SetDuration(_groundMoveDefaultDuration + GetGroundMoveExtraTime(rb.velocity.magnitude));
+    }
+
+    float GetGroundMoveExtraTime(float x) => (4 / (1 + Mathf.Pow((float)Math.E, -0.06f * (x - 70))));
 
     private Vector3 _staticStartVelocity;
     private float _stopExtraDuration;
@@ -164,19 +183,21 @@ public class PlayerMovement : MonoBehaviour
     {
         // Stop player logic
         if (staticDesacellerationTime.GetValue() == 0)
-        {
-            _staticStartVelocity = rb.velocity;
-
-            _stopDefaultDuration = staticDesacellerationTime.GetDuration();
-            _stopExtraDuration = GetStopExtraTime(rb.velocity.magnitude);
-            staticDesacellerationTime.SetDuration(_stopDefaultDuration + _stopExtraDuration);
-        }
+            StartStaticStop();
 
         staticDesacellerationTime.Update(Time.deltaTime);
-        rb.velocity = Vector3.Lerp(_staticStartVelocity, new Vector3(0, rb.velocity.y, 0), staticDesacellerationTime.GetValue());
+        rb.velocity = new Vector3(0, rb.velocity.y, 0) + Vector3.Lerp(_staticStartVelocity, Vector3.zero, staticDesacellerationTime.GetValue());
     }
 
-    float GetStopExtraTime(float x) => (4 / (1 + Mathf.Pow((float) Math.E, (float) -0.08 * (x - 60))));
+    void StartStaticStop()
+    {
+        _staticStartVelocity = rb.velocity;
+        _staticStartVelocity.y = 0;
+        _stopExtraDuration = GetStopExtraTime(rb.velocity.magnitude);
+        staticDesacellerationTime.SetDuration(_stopDefaultDuration + _stopExtraDuration);
+    }
+
+    float GetStopExtraTime(float x) => (4 / (1 + Mathf.Pow((float) Math.E, -0.08f * (x - 60))));
 
     #endregion
 
@@ -185,7 +206,7 @@ public class PlayerMovement : MonoBehaviour
     void JumpManagement()
     {
         _isJumping = IsJumping();
-        _canJump = _isGrounded || CollidersCointainsGround(Physics.OverlapSphere(foot.position, preGroundSphereRadius));
+        _canJump = !_jumpCooldownState && (_isGrounded || CollidersCointainsGround(Physics.OverlapSphere(foot.position, preGroundSphereRadius)));
     }
 
     bool CollidersCointainsGround(Collider[] colliders)
@@ -198,12 +219,18 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
+    private float _jumpCooldown = 0.2f;
+    private bool _jumpCooldownState = false;
     void Jump()
     {
+        _jumpCooldownState = true;
         rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, 0, Mathf.Infinity), rb.velocity.z);
         rb.AddForce(body.transform.up * jumpForce, ForceMode.Impulse);
         rb.AddForce(_normalVector * 0.5f * jumpForce, ForceMode.Impulse);
+        Invoke(nameof(JumpCooldown), _jumpCooldown);
     }
+
+    void JumpCooldown() => _jumpCooldownState = false;
 
     bool IsJumping() => (rb.velocity.y > 0 && Input.GetKey(KeyCode.Space) && !_isGrounded);
 
@@ -228,7 +255,10 @@ public class PlayerMovement : MonoBehaviour
     private void AirMove()
     {
         if (_isGrounded) return;
-        
+
+        Vector2 airVelocity = new Vector2(rb.velocity.x, rb.velocity.z);
+        airMoveSpeed = GetAirMoveSpeed(Mathf.Clamp(airVelocity.magnitude, 0, 50));
+
         // Foward
         rb.AddForce(_planeOrientationForward * _keyboard.y * airMoveSpeed);
         // Sideways
@@ -243,6 +273,8 @@ public class PlayerMovement : MonoBehaviour
         vector *= magnitude;
         return vector;
     }
+
+    float GetAirMoveSpeed(float x) => (17 / (1 + Mathf.Pow((float)Math.E, 0.05f * (x - 30))));
     #endregion
 
     #region Dash
@@ -250,7 +282,7 @@ public class PlayerMovement : MonoBehaviour
     public void Dash()
     {
         Vector3 foward = orientation.transform.forward;
-        rb.velocity = new Vector3(foward.x, foward.y * 1.5f, foward.z) * rb.velocity.magnitude;
+        rb.velocity = new Vector3(foward.x, foward.y * 1.3f, foward.z) * (new Vector2(rb.velocity.x, rb.velocity.z).magnitude / 0.7f);
         rb.AddForce(foward * dashForce, ForceMode.Impulse);
         canDash = false;
         dashState = true;
@@ -286,7 +318,7 @@ public class PlayerMovement : MonoBehaviour
     void FOVCameraEffect()
     {
         float newTarget;
-        if (dashState)
+        if (dashState || !_isGrounded)
         {
             newTarget = fovChangeEffectDashTarget;
             fovChangeEffect.SetDuration(_fovChangeEffectDefaultDuration);
@@ -327,11 +359,30 @@ public class PlayerMovement : MonoBehaviour
                 _normalVector = normal;
                 if (_cancellingGrounded != null)
                     StopCoroutine(_cancellingGrounded);
+                break;
             }
         }
 
         // Invoke ground/wall cancel, since we can't check normals with CollisionExit
         _cancellingGrounded = StartCoroutine(ChangeIsGroundedState(changeIsGroundedStateDelay, false));
+    }
+
+    private void OnCollision(Collision other)
+    {
+        // Make sure we are only checking for walkable layers
+        int layer = other.gameObject.layer;
+        if (!IsGroundLayer(layer)) return;
+
+        // get if ground is working as a floor
+        for (int i = 0; i < other.contactCount; i++)
+        {
+            Vector3 normal = other.contacts[i].normal;
+            if (IsFloor(normal))
+            {
+                StartGroundMove();
+                break;
+            }
+        }
     }
 
     bool IsGroundLayer(int layer) => groundLayer == (groundLayer | (1 << layer));
