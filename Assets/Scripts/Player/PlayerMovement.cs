@@ -41,6 +41,19 @@ public class PlayerMovement : MonoBehaviour
     // Pre-groud sphere
     [SerializeField] private float preGroundSphereRadius = 0.5f;
 
+    [Header("Walljump")]
+    // Checks
+    [SerializeField] private bool _isTouchingWall;
+    [SerializeField] private LayerMask wallLayer;
+    [SerializeField] private float changeWallSlideStateDelay = 0.1f;
+    private Coroutine _cancellingWallslide;
+    private Vector3 _wallslideNormalVector;
+    // Jump
+    [SerializeField] private float walljumpForce = 15;
+    // Slide
+    [SerializeField] private float wallslideMaxFallVelocity = 3.5f;
+    
+    // Apenas apos matar um inimigo
     [Header("Dash")]
     [SerializeField] private float dashForce = 15;
     [SerializeField] private float dashCooldown = 1;
@@ -82,8 +95,11 @@ public class PlayerMovement : MonoBehaviour
     {
         GetInputs();
         GetOrientation();
+
         GroundMoveManagement();
         JumpManagement();
+        SlideWall();
+
         RotateCameraEffect();
         FOVCameraEffect();
     }
@@ -101,12 +117,15 @@ public class PlayerMovement : MonoBehaviour
         _keyboard.y = Input.GetAxisRaw("Vertical");
         _keyboard.Normalize();
 
-        // Jump
-        if (Input.GetKeyDown(KeyCode.Space) && _canJump)
-            Jump();
+        // Walljump or Jump
+        if (Input.GetKeyDown(KeyCode.Space))
+            if (_canJump)
+                Jump();
+            else if (_isTouchingWall)
+                Walljump(); 
 
         // Dash
-        if(Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
             Dash();
     }
 
@@ -251,6 +270,30 @@ public class PlayerMovement : MonoBehaviour
 
     #endregion
 
+    #region Walljmup
+    public float t;
+    void Walljump()
+    {
+        rb.AddForce((_wallslideNormalVector + body.up * t) * walljumpForce, ForceMode.Impulse);
+        Vector3 orientationFowardProjection = Vector3.Project(_planeOrientationForward, _wallslideNormalVector);
+        rb.AddForce((orientation.forward - orientationFowardProjection * 0.7f) * (walljumpForce * 0.7f), ForceMode.Impulse);
+    }
+
+    void SlideWall()
+    {
+        if (_isTouchingWall)
+            rb.velocity = new Vector3(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallslideMaxFallVelocity, Mathf.Infinity), rb.velocity.z);
+    }
+
+    void StartWallslide(Collision other)
+    {
+        Vector3 collisionForce = other.impulse / Time.fixedDeltaTime;
+        rb.AddForce(body.transform.up * other.impulse.magnitude * 0.7f, ForceMode.Impulse);
+
+    }
+
+    #endregion
+
     #region AirMovement
     private void AirMove()
     {
@@ -318,7 +361,7 @@ public class PlayerMovement : MonoBehaviour
     void FOVCameraEffect()
     {
         float newTarget;
-        if (dashState || !_isGrounded)
+        if (dashState || (!_isGrounded && new Vector2(rb.velocity.x, rb.velocity.z).magnitude != 0))
         {
             newTarget = fovChangeEffectDashTarget;
             fovChangeEffect.SetDuration(_fovChangeEffectDefaultDuration);
@@ -347,8 +390,14 @@ public class PlayerMovement : MonoBehaviour
     {
         // Make sure we are only checking for walkable layers
         int layer = other.gameObject.layer;
-        if (!IsGroundLayer(layer)) return;
 
+        if (IsGroundLayer(layer)) Ground(other);
+        if (IsWallLayer(layer)) Wall(other);
+        
+    }
+
+    void Ground(Collision other)
+    {
         // get if ground is working as a floor
         for (int i = 0; i < other.contactCount; i++)
         {
@@ -367,12 +416,35 @@ public class PlayerMovement : MonoBehaviour
         _cancellingGrounded = StartCoroutine(ChangeIsGroundedState(changeIsGroundedStateDelay, false));
     }
 
-    private void OnCollision(Collision other)
+    void Wall(Collision other)
     {
-        // Make sure we are only checking for walkable layers
-        int layer = other.gameObject.layer;
-        if (!IsGroundLayer(layer)) return;
+        for (int i = 0; i < other.contactCount; i++)
+        {
+            Vector3 normal = other.contacts[i].normal;
+            if (IsWall(normal))
+            {
+                _isTouchingWall = true;
+                _wallslideNormalVector = normal;
+                if (_cancellingWallslide != null)
+                    StopCoroutine(_cancellingWallslide);
+                break;
+            }
+        }
 
+        _cancellingWallslide = StartCoroutine(ChangeIsSlidingWallState(changeWallSlideStateDelay, false));
+    }
+
+    private void OnCollisionEnter(Collision other)
+    {
+        int layer = other.gameObject.layer;
+        if (IsGroundLayer(layer))
+            HitGround(other);
+        if (IsWallLayer(layer))
+            HitWall(other);
+    }
+
+    void HitGround(Collision other)
+    {
         // get if ground is working as a floor
         for (int i = 0; i < other.contactCount; i++)
         {
@@ -385,7 +457,23 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void HitWall(Collision other)
+    {
+        // get if ground is working as a floor
+        for (int i = 0; i < other.contactCount; i++)
+        {
+            Vector3 normal = other.contacts[i].normal;
+            if (IsWall(normal))
+            {
+                StartWallslide(other);
+                break;
+            }
+        }
+    }
+
     bool IsGroundLayer(int layer) => groundLayer == (groundLayer | (1 << layer));
+
+    bool IsWallLayer(int layer) => wallLayer == (wallLayer | (1 << layer));
 
     bool IsFloor(Vector3 v)
     {
@@ -393,10 +481,22 @@ public class PlayerMovement : MonoBehaviour
         return angle < 75;
     }
 
+    bool IsWall(Vector3 v)
+    {
+        float angle = Vector3.Angle(Vector3.up, v);
+        return angle > 80;
+    }
+
     IEnumerator ChangeIsGroundedState(float delay, bool newState)
     {
         yield return new WaitForSeconds(delay);
         _isGrounded = newState;
+    }
+
+    IEnumerator ChangeIsSlidingWallState(float delay, bool newState)
+    {
+        yield return new WaitForSeconds(delay);
+        _isTouchingWall = newState;
     }
 
     #endregion
