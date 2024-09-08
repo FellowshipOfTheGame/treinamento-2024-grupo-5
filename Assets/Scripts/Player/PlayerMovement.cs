@@ -271,10 +271,9 @@ public class PlayerMovement : MonoBehaviour
     #endregion
 
     #region Walljmup
-    public float t;
     void Walljump()
     {
-        rb.AddForce((_wallslideNormalVector + body.up * t) * walljumpForce, ForceMode.Impulse);
+        rb.AddForce((_wallslideNormalVector + body.up * 0.7f) * walljumpForce, ForceMode.Impulse);
         Vector3 orientationFowardProjection = Vector3.Project(_planeOrientationForward, _wallslideNormalVector);
         rb.AddForce((orientation.forward - orientationFowardProjection * 0.7f) * (walljumpForce * 0.7f), ForceMode.Impulse);
     }
@@ -287,9 +286,7 @@ public class PlayerMovement : MonoBehaviour
 
     void StartWallslide(Collision other)
     {
-        Vector3 collisionForce = other.impulse / Time.fixedDeltaTime;
-        rb.AddForce(body.transform.up * other.impulse.magnitude * 0.7f, ForceMode.Impulse);
-
+        rb.AddForce(body.transform.up * other.impulse.magnitude * 0.4f, ForceMode.Impulse);
     }
 
     #endregion
