@@ -15,13 +15,20 @@ public class PlayerMovement : MonoBehaviour
     [Header("Ground Movemnent")]
     [SerializeField] private float groundMoveSpeed = 10;
     [SerializeField] private InterpolatedFloat groundMoveTime = new(1, 0.2f);
+    [SerializeField]  float groundMoveDuration;
 
     // Counter movement
     private bool _isStatic = true;
-    [SerializeField] private InterpolatedFloat staticDesacellerationTime = new(1, 0.35f);
+    [SerializeField] private InterpolatedFloat _staticDesacellerationTime = new(1, 0.35f);
+    [SerializeField] private float stopDefaultDuration;
 
     [Header("Air Movement")]
     [SerializeField] private float airMoveSpeed = 15;
+    [SerializeField] private float airDesaccelerateSpeed;
+    [SerializeField] private float airMoveMaxSpeed = 70;
+
+    // Counter movement
+    [SerializeField] private InterpolatedFloat airMoveDesacellerationTime = new(1, 0.35f);
 
     [Header("Jump")]
     // Forces
@@ -60,8 +67,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private bool canDash = true;
 
     // Slide while dashing
-    [SerializeField] private bool dashState = false;
-    [SerializeField] private float dashStateDuration = 0.2f;
+    [SerializeField] private bool _isDashing = false;
+    [SerializeField] private float dashDuration = 0.2f;
+
+    [Header("Slide")]
+    [SerializeField] private float slideForce = 15;
+    [SerializeField] private float slideCooldown = 1;
+    [SerializeField] private bool canSlide = true;
+
 
     [Header("Camera Effects")]
     // Rotation
@@ -82,23 +95,24 @@ public class PlayerMovement : MonoBehaviour
     {
         if(rb == null)
             Generics.ReallyTryGetComponent(gameObject, out rb);
-        _stopDefaultDuration = staticDesacellerationTime.GetDuration();
-        _groundMoveDefaultDuration = groundMoveTime.GetDuration();
+
+        _staticDesacellerationTime.SetDuration(stopDefaultDuration);
+        groundMoveTime.SetDuration(groundMoveDuration);
 
         if (firstPerson == null)
             Generics.ReallyTryGetComponent(gameObject, out firstPerson);
         fovChangeEffect.SetStartValue(firstPerson.baseFOV);
-        _fovChangeEffectDefaultDuration = fovChangeEffect.GetDuration();
     }
 
     private void Update()
     {
-        GetInputs();
         GetOrientation();
+        GetInputs();
 
         GroundMoveManagement();
         JumpManagement();
         SlideWall();
+        LimitAirMove();
 
         RotateCameraEffect();
         FOVCameraEffect();
@@ -116,6 +130,8 @@ public class PlayerMovement : MonoBehaviour
         _keyboard.x = Input.GetAxisRaw("Horizontal");
         _keyboard.y = Input.GetAxisRaw("Vertical");
         _keyboard.Normalize();
+
+        _isStatic = _keyboard == Vector2.zero;
 
         // Walljump or Jump
         if (Input.GetKeyDown(KeyCode.Space))
@@ -145,21 +161,25 @@ public class PlayerMovement : MonoBehaviour
 
     Vector2 PlaneVelocityRelativeToOrientation() => GetCordinatesRelativeToOrientation(new Vector2(rb.velocity.x, rb.velocity.z));
 
+    Vector3 RemoveYFromVector(Vector3 vector)
+    {
+        vector.y = 0;
+        return vector;
+    }
+
     #region GroundMovement
 
     void GroundMoveManagement()
     {
-        _isStatic = _keyboard == Vector2.zero;
-
         // Check if player is 'static-intetion'
-        if (_isGrounded)
+        if (_isGrounded && !_isJumping && !_isDashing)
         {
             if (!_isStatic)
             {
-                staticDesacellerationTime.Reset();
+                _staticDesacellerationTime.Reset();
                 GroundMove();
             }
-            else if(!dashState)
+            else
             {
                 groundMoveTime.Reset();
                 StaticStop();
@@ -167,14 +187,13 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            staticDesacellerationTime.Reset();
+            _staticDesacellerationTime.Reset();
             groundMoveTime.Reset();
         }
     }
 
 
     Vector3 _startGroundMoveVelocity;
-    float _groundMoveDefaultDuration;
     void GroundMove()
     {
         if(groundMoveTime.GetValue() == 0)
@@ -190,33 +209,32 @@ public class PlayerMovement : MonoBehaviour
     {
         _startGroundMoveVelocity = rb.velocity;
         _startGroundMoveVelocity.y = 0;
-        groundMoveTime.SetDuration(_groundMoveDefaultDuration + GetGroundMoveExtraTime(rb.velocity.magnitude));
+        groundMoveTime.SetDuration(groundMoveDuration + GetGroundMoveExtraTime(rb.velocity.magnitude));
     }
 
     float GetGroundMoveExtraTime(float x) => (4 / (1 + Mathf.Pow((float)Math.E, -0.06f * (x - 70))));
 
     private Vector3 _staticStartVelocity;
     private float _stopExtraDuration;
-    private float _stopDefaultDuration;
     void StaticStop()
     {
         // Stop player logic
-        if (staticDesacellerationTime.GetValue() == 0)
+        if (_staticDesacellerationTime.GetValue() == 0)
             StartStaticStop();
 
-        staticDesacellerationTime.Update(Time.deltaTime);
-        rb.velocity = new Vector3(0, rb.velocity.y, 0) + Vector3.Lerp(_staticStartVelocity, Vector3.zero, staticDesacellerationTime.GetValue());
+        _staticDesacellerationTime.Update(Time.deltaTime);
+        rb.velocity = new Vector3(0, rb.velocity.y, 0) + Vector3.Lerp(_staticStartVelocity, Vector3.zero, _staticDesacellerationTime.GetValue());
     }
 
     void StartStaticStop()
     {
         _staticStartVelocity = rb.velocity;
         _staticStartVelocity.y = 0;
-        _stopExtraDuration = GetStopExtraTime(rb.velocity.magnitude);
-        staticDesacellerationTime.SetDuration(_stopDefaultDuration + _stopExtraDuration);
+        _stopExtraDuration = GetStaticStopExtraTime(rb.velocity.magnitude);
+        _staticDesacellerationTime.SetDuration(stopDefaultDuration + _stopExtraDuration);
     }
 
-    float GetStopExtraTime(float x) => (4 / (1 + Mathf.Pow((float) Math.E, -0.08f * (x - 60))));
+    float GetStaticStopExtraTime(float x) => (4 / (1 + Mathf.Pow((float) Math.E, -0.08f * (x - 60))));
 
     #endregion
 
@@ -271,12 +289,7 @@ public class PlayerMovement : MonoBehaviour
     #endregion
 
     #region Walljmup
-    void Walljump()
-    {
-        rb.AddForce((_wallslideNormalVector + body.up * 0.7f) * walljumpForce, ForceMode.Impulse);
-        Vector3 orientationFowardProjection = Vector3.Project(_planeOrientationForward, _wallslideNormalVector);
-        rb.AddForce((orientation.forward - orientationFowardProjection * 0.7f) * (walljumpForce * 0.7f), ForceMode.Impulse);
-    }
+    void Walljump() => rb.AddForce((_wallslideNormalVector + body.up * 0.7f) * walljumpForce, ForceMode.Impulse);
 
     void SlideWall()
     {
@@ -294,45 +307,69 @@ public class PlayerMovement : MonoBehaviour
     #region AirMovement
     private void AirMove()
     {
-        if (_isGrounded) return;
+        if (_isGrounded || _isStatic) return;
 
         Vector2 airVelocity = new Vector2(rb.velocity.x, rb.velocity.z);
-        airMoveSpeed = GetAirMoveSpeed(Mathf.Clamp(airVelocity.magnitude, 0, 50));
+        Vector3 foward = _planeOrientationForward * _keyboard.y;
+        Vector3 sideways = _planeOrientationRight * _keyboard.x;
 
+        airMoveSpeed = GetAirMoveSpeed(Mathf.Clamp(airVelocity.magnitude, 0, 60));
+        airDesaccelerateSpeed = GetAirDesaccelerationMoveSpeed(Mathf.Clamp(airVelocity.magnitude, 0, 60));
+        
         // Foward
-        rb.AddForce(_planeOrientationForward * _keyboard.y * airMoveSpeed);
+        if (Vector3.Angle(foward, rb.velocity) > 90f)
+            rb.AddForce(foward * airDesaccelerateSpeed);
+        else
+            rb.AddForce(foward * airMoveSpeed);
+
+        Debug.Log($"Foward: {Vector3.Angle(foward, rb.velocity)}");
+
         // Sideways
-        rb.AddForce(_planeOrientationRight * _keyboard.x * airMoveSpeed);
+        if (Vector3.Angle(sideways, rb.velocity) > 90f)
+            rb.AddForce(sideways * airDesaccelerateSpeed * 0.75f);
+        else
+            rb.AddForce(sideways * airMoveSpeed * 0.75f);
+
+        Debug.Log($"Sideways: {Vector3.Angle(sideways, rb.velocity)}");
     }
 
-    Vector3 RemoveYFromVector(Vector3 vector)
+    float GetAirMoveSpeed(float x) => (19 / (1 + Mathf.Pow((float)Math.E, 0.1f * (x - 30))));
+    float GetAirDesaccelerationMoveSpeed(float x) => (7 + 20 / (1 + Mathf.Pow((float)Math.E, -0.05f * (x - 15))));
+
+    void LimitAirMove()
     {
-        float magnitude = Vector3.Magnitude(vector);
-        vector.y = 0;
-        vector.Normalize();
-        vector *= magnitude;
-        return vector;
+        if (_isGrounded)
+            return;
+
+        Vector3 planeVelocity = RemoveYFromVector(rb.velocity);
+        rb.velocity = planeVelocity.normalized * Mathf.Clamp(planeVelocity.magnitude, 0, airMoveMaxSpeed) + new Vector3(0, rb.velocity.y, 0);
     }
 
-    float GetAirMoveSpeed(float x) => (17 / (1 + Mathf.Pow((float)Math.E, 0.05f * (x - 30))));
     #endregion
 
     #region Dash
 
     public void Dash()
     {
-        Vector3 foward = orientation.transform.forward;
-        rb.velocity = new Vector3(foward.x, foward.y * 1.3f, foward.z) * (new Vector2(rb.velocity.x, rb.velocity.z).magnitude / 0.7f);
-        rb.AddForce(foward * dashForce, ForceMode.Impulse);
+        Vector3 dashDirection;
+
+        // Apply force
+        if (_keyboard != Vector2.zero)
+            dashDirection = _planeOrientationForward * _keyboard.y + _planeOrientationRight * _keyboard.x;
+        else
+            dashDirection = _planeOrientationForward;
+
+        rb.velocity = dashDirection * dashForce + new Vector3(0, rb.velocity.y, 0);
+        // Manage states
         canDash = false;
-        dashState = true;
-        Invoke(nameof(ExitDashState), dashStateDuration);
+        _isDashing = true;
+        Invoke(nameof(ExitDashState), dashDuration);
         Invoke(nameof(EnableDash), dashCooldown);
     }
 
     void EnableDash() => canDash = true;
 
-    void ExitDashState() => dashState = false;
+    void ExitDashState() => _isDashing = false;
 
     #endregion
 
@@ -353,30 +390,29 @@ public class PlayerMovement : MonoBehaviour
         firstPerson.SetZRotation(cameraZRotationEffect.GetValue());
     }
 
-
-    private float _fovChangeEffectDefaultDuration;
     void FOVCameraEffect()
     {
         float newTarget;
-        if (dashState || (!_isGrounded && new Vector2(rb.velocity.x, rb.velocity.z).magnitude != 0))
+        if (_isDashing)
         {
             newTarget = fovChangeEffectDashTarget;
-            fovChangeEffect.SetDuration(_fovChangeEffectDefaultDuration);
+            fovChangeEffect.SetDuration(dashDuration);
         }
         else
         {
             newTarget = firstPerson.baseFOV;
-            fovChangeEffect.SetDuration(_fovChangeEffectDefaultDuration * 0.8f);
+            fovChangeEffect.SetDuration(dashDuration * 2f);
         }
 
+        fovChangeEffect.Update(Time.deltaTime);
         if (fovChangeEffect.GetTarget() != newTarget)
         {
             fovChangeEffect.SetStartValue(fovChangeEffect.GetValue());
+            fovChangeEffect.SetDuration(fovChangeEffect.GetDuration() - Time.deltaTime);
             fovChangeEffect.SetTarget(newTarget);
             fovChangeEffect.Reset();
         }
-            
-        fovChangeEffect.Update(Time.deltaTime);
+
         firstPerson.SetFOV(fovChangeEffect.GetValue());
     }
 
