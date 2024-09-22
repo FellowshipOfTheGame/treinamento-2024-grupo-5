@@ -21,7 +21,7 @@ public class Test_Ranking : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float playerSpeed = playerRb.velocity.magnitude;
+        float playerSpeed = new Vector2(playerRb.velocity.x, playerRb.velocity.z).magnitude;
         if(playerSpeed > speedRecord)
             speedRecord = playerSpeed;
         SetMovementStatistics(playerSpeed);

@@ -184,7 +184,6 @@ GameObject:
   - component: {fileID: 79443877991578681}
   - component: {fileID: 9187463006278666535}
   - component: {fileID: 2048224215761797906}
-  - component: {fileID: 8957150455876640574}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -225,26 +224,34 @@ MonoBehaviour:
   body: {fileID: 789050426170080411}
   foot: {fileID: 4606442901204940964}
   firstPerson: {fileID: 0}
-  groundMoveSpeed: 10
+  groundMoveSpeed: 12
   groundMoveTime:
     startValue: 0
     target: 1
     duration: 0.15
-  staticDesacellerationTime:
+  groundMoveDuration: 0.15
+  _staticDesacellerationTime:
     startValue: 0
     target: 1
-    duration: 0.1
+    duration: 0.35
+  stopDefaultDuration: 0.1
   airMoveSpeed: 15
-  gravityMultiplier: 5
+  airDesaccelerateSpeed: 0
+  airMoveMaxSpeed: 70
+  airMoveDesacellerationTime:
+    startValue: 0
+    target: 1
+    duration: 0.35
+  gravityMultiplier: 4
   gravityPercentWhileJumping: 0.75
-  jumpForce: 15
+  jumpForce: 10
   _isJumping: 0
   _canJump: 0
   _isGrounded: 0
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
-  changeIsGroundedStateDelay: 0.1
+  changeIsGroundedStateDelay: 0.2
   preGroundSphereRadius: 0.2
   _isTouchingWall: 0
   wallLayer:
@@ -253,21 +260,24 @@ MonoBehaviour:
   changeWallSlideStateDelay: 0.1
   walljumpForce: 12
   wallslideMaxFallVelocity: 3.5
-  dashForce: 1
+  dashForce: 25
   dashCooldown: 1
   canDash: 1
-  dashState: 0
-  dashStateDuration: 0.05
+  _isDashing: 0
+  dashDuration: 0.15
+  slideForce: 15
+  slideCooldown: 1
+  canSlide: 1
   cameraZRotationEffect:
     startValue: 0
     target: 0
     duration: 0.2
-  cameraTargetZRotation: 3
+  cameraTargetZRotation: 1.5
   fovChangeEffect:
     startValue: 70
     target: 50
     duration: 0.3
-  fovChangeEffectDashTarget: 70
+  fovChangeEffectDashTarget: 86
 --- !u!54 &9187463006278666535
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -310,27 +320,6 @@ MonoBehaviour:
   HPBar: {fileID: 0}
   MaxHP: 100
   CurrentHP: 100
---- !u!65 &8957150455876640574
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4632741985066660338}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8088374784937446622
 GameObject:
   m_ObjectHideFlags: 0

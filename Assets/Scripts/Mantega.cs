@@ -45,9 +45,15 @@ namespace Mantega
     {
         public static bool ReallyTryGetComponent<T>(GameObject gameObject, out T component) where T : Component
         {
-            // Tenta obter o componente diretamente
-            if (!(gameObject == null) && gameObject.TryGetComponent(out component))
-                return true;
+            // Tenta obter o componente diretamente e nos filhos
+            if (!(gameObject == null))
+            {
+                if(gameObject.TryGetComponent(out component))
+                    return true;
+                // Tenta obter nos pais
+                if ((component = gameObject.GetComponentInParent<T>()) != null)
+                    return true;
+            }
 
             // Se não encontrar, tenta encontrar no cenário
             component = GameObject.FindObjectOfType<T>();
@@ -69,6 +75,8 @@ namespace Mantega
 
             return new Vector2(alpha, beta);
         }
+
+        // Gets sign of a float value
         public static int Sign(float value) => value > 0 ? 1 : value < 0 ? -1 : 0;
     }
 }
