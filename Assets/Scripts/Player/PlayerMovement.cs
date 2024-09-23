@@ -2,10 +2,13 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Mantega;
+using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(PlayerInput))]
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Components")]
+    [SerializeField] private PlayerInput playerInput;
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
     [SerializeField] protected Transform body;
@@ -102,12 +105,43 @@ public class PlayerMovement : MonoBehaviour
         if (firstPerson == null)
             Generics.ReallyTryGetComponent(gameObject, out firstPerson);
         fovChangeEffect.SetStartValue(firstPerson.baseFOV);
+
+        // Inputs
+        SettupInput();
     }
+
+    #region Input
+    void SettupInput()
+    {
+        // Movement
+        playerInput.keyboard += KeyboardInput;
+
+        // Walljump or Jump
+        playerInput.jump += JumpInput;
+
+        // Dash
+        playerInput.dash += Dash;
+    }
+
+    void KeyboardInput(Vector2 v)
+    {
+        _keyboard = v;
+        _isStatic = _keyboard == Vector2.zero;
+    }
+
+    void JumpInput()
+    {
+        if (_canJump)
+            Jump();
+        else if (_isTouchingWall)
+            Walljump();
+    }
+
+    #endregion
 
     private void Update()
     {
         GetOrientation();
-        GetInputs();
 
         GroundMoveManagement();
         JumpManagement();
@@ -122,27 +156,6 @@ public class PlayerMovement : MonoBehaviour
     {
         Gravity();
         AirMove();
-    }
-
-    void GetInputs()
-    {
-        // Movement
-        _keyboard.x = Input.GetAxisRaw("Horizontal");
-        _keyboard.y = Input.GetAxisRaw("Vertical");
-        _keyboard.Normalize();
-
-        _isStatic = _keyboard == Vector2.zero;
-
-        // Walljump or Jump
-        if (Input.GetKeyDown(KeyCode.Space))
-            if (_canJump)
-                Jump();
-            else if (_isTouchingWall)
-                Walljump(); 
-
-        // Dash
-        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
-            Dash();
     }
 
     void GetOrientation()
@@ -537,6 +550,13 @@ public class PlayerMovement : MonoBehaviour
     void OnDrawGizmosSelected()
     {
         DrawPreGroundSphere();
+    }
+
+    private void OnDestroy()
+    {
+        playerInput.keyboard -= KeyboardInput;
+        playerInput.jump -= JumpInput;
+        playerInput.dash -= Dash;
     }
 }
 
