@@ -1,12 +1,4 @@
 using System;
-<<<<<<< Updated upstream
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace Mantega
-{
-=======
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -240,23 +232,6 @@ namespace Mantega
         }
     }
 
->>>>>>> Stashed changes
-    [Serializable]
-    public class Inter : MonoBehaviour
-    {
-        public Timer timer;
-
-        private void Awake()
-        {
-            timer = new Timer(1, true);
-        }
-
-        private void OnDestroy()
-        {
-            timer.Dispose();
-        }
-    }
-
     [Serializable]
     public class InterpolatedFloat
     {
@@ -291,44 +266,5 @@ namespace Mantega
         public float SetStartValue(float value) => startValue = value;
 
         public float GetTime() => _time;
-    }
-
-    public static class Generics
-    {
-        public static bool ReallyTryGetComponent<T>(GameObject gameObject, out T component) where T : Component
-        {
-            // Tenta obter o componente diretamente e nos filhos
-            if (!(gameObject == null))
-            {
-                if(gameObject.TryGetComponent(out component))
-                    return true;
-                // Tenta obter nos pais
-                if ((component = gameObject.GetComponentInParent<T>()) != null)
-                    return true;
-            }
-
-            // Se não encontrar, tenta encontrar no cenário
-            component = GameObject.FindObjectOfType<T>();
-
-            // Se ainda não encontrar, retorna um erro
-            if (component == null)
-            {
-                Debug.LogError($"{typeof(T).Name} component not found in {gameObject.name} GameObject", gameObject);
-                return false;
-            }
-
-            return true;
-        }
-
-        public static Vector2 ChangeVectorCordinates(Vector2 V, Vector2 X, Vector2 Y)
-        {
-            float alpha = (V.y * Y.x - V.x * Y.y) / (X.y * Y.x - X.x * Y.y);
-            float beta = (V.x - alpha * X.x) / Y.x;
-
-            return new Vector2(alpha, beta);
-        }
-
-        // Gets sign of a float value
-        public static int Sign(float value) => value > 0 ? 1 : value < 0 ? -1 : 0;
     }
 }
