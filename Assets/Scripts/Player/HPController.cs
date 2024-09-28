@@ -19,11 +19,13 @@ public class HPController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        HPBar.fillAmount = (float)CurrentHP / MaxHP;
+        if (HPBar != null)
+            HPBar.fillAmount = (float)CurrentHP / MaxHP;
     }
 
     public void LoseHP(int Damage)
     {
+        Debug.Log($"{name} perdeu vida");
         CurrentHP -= Damage;
 
         if (CurrentHP <= 0) // Condicao de derrota

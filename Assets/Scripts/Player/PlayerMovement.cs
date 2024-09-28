@@ -70,10 +70,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private bool _isDashing = false;
     [SerializeField] private float dashDuration = 0.2f;
 
-    [Header("Slide")]
-    [SerializeField] private float slideForce = 15;
-    [SerializeField] private float slideCooldown = 1;
-    [SerializeField] private bool canSlide = true;
+    //[Header("Slide")]
+    //[SerializeField] private float slideForce = 15;
+    //[SerializeField] private float slideCooldown = 1;
+    //[SerializeField] private bool canSlide = true;
 
 
     [Header("Camera Effects")]
@@ -102,6 +102,16 @@ public class PlayerMovement : MonoBehaviour
         if (firstPerson == null)
             Generics.ReallyTryGetComponent(gameObject, out firstPerson);
         fovChangeEffect.SetStartValue(firstPerson.baseFOV);
+<<<<<<< Updated upstream
+=======
+
+
+        // Inputs
+        if (playerInput == null)
+            Generics.ReallyTryGetComponent(gameObject, out playerInput);
+
+        SettupInput();
+>>>>>>> Stashed changes
     }
 
     private void Update()
@@ -351,6 +361,8 @@ public class PlayerMovement : MonoBehaviour
 
     public void Dash()
     {
+        if(!canDash)
+            return;
         Vector3 dashDirection;
 
         // Apply force
