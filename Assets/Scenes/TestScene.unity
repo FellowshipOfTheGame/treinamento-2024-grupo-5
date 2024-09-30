@@ -9286,7 +9286,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1838293370}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 10d8435f85a6df545b301cc1fd0216a6, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -10700,6 +10700,10 @@ PrefabInstance:
       propertyPath: orientation
       value: 
       objectReference: {fileID: 931000475}
+    - target: {fileID: 79443877991578681, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
+      propertyPath: airMoveSpeed
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 1047143529578504164, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

@@ -23,6 +23,15 @@ public class MovingPlatformController : MonoBehaviour
 
     }
 
+    public Vector3 Velocity()
+    {
+        if(isWaiting)
+        {
+            return Vector3.zero;
+        }
+
+        return (destinationTarget.position - departTarget.position).normalized * speed;
+    }
 
     void Update()
     {
@@ -69,29 +78,5 @@ public class MovingPlatformController : MonoBehaviour
             destinationTarget = startPoint;
         }
 
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        // Obtém o transform raiz do objeto colidido
-        Transform rootTransform = other.transform.root;
-
-        if (rootTransform.CompareTag("Player"))
-        {
-            // Define a plataforma como pai do jogador
-            rootTransform.parent = transform;
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        // Obtém o transform raiz do objeto colidido
-        Transform rootTransform = other.transform.root;
-
-        if (rootTransform.CompareTag("Player"))
-        {
-            // Remove a plataforma como pai do jogador
-            rootTransform.parent = null;
-        }
     }
 }

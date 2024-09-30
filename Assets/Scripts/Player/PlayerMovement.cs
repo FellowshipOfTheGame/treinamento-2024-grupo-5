@@ -49,6 +49,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 _normalVector;
     // Pre-groud sphere
     [SerializeField] private float preGroundSphereRadius = 0.5f;
+    [SerializeField] private bool _isPreground = false;
 
     [Header("Walljump")]
     // Checks
@@ -177,14 +178,20 @@ public class PlayerMovement : MonoBehaviour
 
     Vector3 RemoveYFromVector(Vector3 vector)
     {
+        float magnitude = vector.magnitude;
         vector.y = 0;
+        vector = vector.normalized * magnitude;
         return vector;
     }
 
     #region GroundMovement
 
+    Vector3 _groundVelocity = Vector3.zero;
     void GroundMoveManagement()
     {
+        if(!_isPreground)
+            _groundVelocity = Vector3.zero;
+
         // Check if player is 'static-intetion'
         if (_isGrounded && !_isJumping && !_isDashing)
         {
@@ -206,7 +213,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-
     Vector3 _startGroundMoveVelocity;
     void GroundMove()
     {
@@ -215,13 +221,14 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 maxVelocity = (_planeOrientationForward * _keyboard.y + _planeOrientationRight * _keyboard.x) * groundMoveSpeed;
         groundMoveTime.Update(Time.deltaTime);
-        Vector3 moveVelocity = Vector3.Lerp(_startGroundMoveVelocity, maxVelocity, groundMoveTime.GetValue());
+        Vector3 moveVelocity = Vector3.Lerp(_startGroundMoveVelocity, maxVelocity + _groundVelocity, groundMoveTime.GetValue());
         rb.velocity = moveVelocity + new Vector3(0, rb.velocity.y, 0);
     }
 
     void StartGroundMove()
     {
         _startGroundMoveVelocity = rb.velocity;
+
         _startGroundMoveVelocity.y = 0;
         groundMoveTime.SetDuration(groundMoveDuration + GetGroundMoveExtraTime(rb.velocity.magnitude));
     }
@@ -237,7 +244,7 @@ public class PlayerMovement : MonoBehaviour
             StartStaticStop();
 
         _staticDesacellerationTime.Update(Time.deltaTime);
-        rb.velocity = new Vector3(0, rb.velocity.y, 0) + Vector3.Lerp(_staticStartVelocity, Vector3.zero, _staticDesacellerationTime.GetValue());
+        rb.velocity = new Vector3(0, rb.velocity.y, 0) + Vector3.Lerp(_staticStartVelocity, _groundVelocity, _staticDesacellerationTime.GetValue());
     }
 
     void StartStaticStop()
@@ -257,7 +264,8 @@ public class PlayerMovement : MonoBehaviour
     void JumpManagement()
     {
         _isJumping = IsJumping();
-        _canJump = !_jumpCooldownState && (_isGrounded || CollidersCointainsGround(Physics.OverlapSphere(foot.position, preGroundSphereRadius)));
+        _isPreground = CollidersCointainsGround(Physics.OverlapSphere(foot.position, preGroundSphereRadius));
+        _canJump = !_jumpCooldownState && (_isGrounded || _isPreground);
     }
 
     bool CollidersCointainsGround(Collider[] colliders)
@@ -355,8 +363,9 @@ public class PlayerMovement : MonoBehaviour
         if (_isGrounded)
             return;
 
+        float magnitude = new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude;
         Vector3 planeVelocity = RemoveYFromVector(rb.velocity);
-        rb.velocity = planeVelocity.normalized * Mathf.Clamp(planeVelocity.magnitude, 0, airMoveMaxSpeed) + new Vector3(0, rb.velocity.y, 0);
+        rb.velocity = planeVelocity.normalized * Mathf.Clamp(magnitude, 0, airMoveMaxSpeed) + new Vector3(0, rb.velocity.y, 0);
     }
 
     #endregion
@@ -452,6 +461,14 @@ public class PlayerMovement : MonoBehaviour
             Vector3 normal = other.contacts[i].normal;
             if (IsFloor(normal))
             {
+                if (Generics.FamilyTryGetComponent(other.gameObject, out MovingPlatformController platform))
+                {
+                    _groundVelocity = platform.Velocity();
+                    //_groundVelocity.y = 0;
+                }
+                else
+                    _groundVelocity = Vector3.zero;
+
                 _isGrounded = true;
                 _normalVector = normal;
                 if (_cancellingGrounded != null)
