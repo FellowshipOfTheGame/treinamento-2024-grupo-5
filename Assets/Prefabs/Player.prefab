@@ -217,6 +217,7 @@ GameObject:
   - component: {fileID: 9187463006278666535}
   - component: {fileID: 2048224215761797906}
   - component: {fileID: 6755525692779146323}
+  - component: {fileID: 669423193226920414}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -385,7 +386,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerInput: {fileID: 0}
   attackPoint: {fileID: 1047143529578504164}
-  attackRange: 0.6
+  _canAttack: 1
+  weapon: {fileID: 11400000, guid: b73319ff41949104fb68b2ba76e1a4ef, type: 2}
+  _weaponGameObject: {fileID: 0}
+  _weaponItem: {fileID: 0}
+--- !u!114 &669423193226920414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4632741985066660338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec79ce7ce2f0aa45abbbd8c4fc8acca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keys: 0
+  playerAttack: {fileID: 0}
+  playerMovement: {fileID: 0}
+  playerHealth: {fileID: 0}
+  basicWeapon: {fileID: 11400000, guid: b73319ff41949104fb68b2ba76e1a4ef, type: 2}
 --- !u!1 &8088374784937446622
 GameObject:
   m_ObjectHideFlags: 0

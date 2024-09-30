@@ -20,7 +20,7 @@ public class PlayerInput : MonoBehaviour
     public Action dash;
     public KeyCode dashKey = KeyCode.LeftShift;
 
-    [Header("Dash Attack")]
+    [Header("Attack key")]
     public Action attack;
     public KeyCode attackKey = KeyCode.Mouse0;
 

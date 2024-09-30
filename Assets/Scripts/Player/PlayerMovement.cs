@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using Mantega;
 
+// Future: implement slide
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Components")]
@@ -70,12 +71,6 @@ public class PlayerMovement : MonoBehaviour
     // Slide while dashing
     [SerializeField] private bool _isDashing = false;
     [SerializeField] private float dashDuration = 0.2f;
-
-    //[Header("Slide")]
-    //[SerializeField] private float slideForce = 15;
-    //[SerializeField] private float slideCooldown = 1;
-    //[SerializeField] private bool canSlide = true;
-
 
     [Header("Camera Effects")]
     // Rotation
@@ -341,7 +336,7 @@ public class PlayerMovement : MonoBehaviour
         else
             rb.AddForce(foward * airMoveSpeed);
 
-        Debug.Log($"Foward: {Vector3.Angle(foward, rb.velocity)}");
+        //Debug.Log($"Foward: {Vector3.Angle(foward, rb.velocity)}");
 
         // Sideways
         if (Vector3.Angle(sideways, rb.velocity) > 90f)
@@ -349,7 +344,7 @@ public class PlayerMovement : MonoBehaviour
         else
             rb.AddForce(sideways * airMoveSpeed * 0.75f);
 
-        Debug.Log($"Sideways: {Vector3.Angle(sideways, rb.velocity)}");
+        //Debug.Log($"Sideways: {Vector3.Angle(sideways, rb.velocity)}");
     }
 
     float GetAirMoveSpeed(float x) => (19 / (1 + Mathf.Pow((float)Math.E, 0.1f * (x - 30))));
@@ -447,7 +442,6 @@ public class PlayerMovement : MonoBehaviour
 
         if (IsGroundLayer(layer)) Ground(other);
         if (IsWallLayer(layer)) Wall(other);
-        
     }
 
     void Ground(Collision other)

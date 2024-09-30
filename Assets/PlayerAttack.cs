@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mantega;
+using System;
 
 public class PlayerAttack : MonoBehaviour
 {
@@ -10,32 +11,74 @@ public class PlayerAttack : MonoBehaviour
 
     [Header("Attack")]
     [SerializeField] private Transform attackPoint;
-    [SerializeField] private float attackRange = 1f;
+    [SerializeField] private bool _canAttack = true;
+    public Action<float> attack;
+
+    [Header("Weapon")]
+    public ScriptableItem weapon;
+    [SerializeField] private GameObject _weaponGameObject;
+    [SerializeField] private Item _weaponItem;
 
     void Start()
     {
         if (playerInput == null)
             Generics.ReallyTryGetComponent(gameObject, out playerInput);
         playerInput.attack += Attack;
+
+        if (weapon != null)
+            ActiveWeapon(weapon);
+    }
+
+    public void ResetAttack()
+    {
+        DesactiveWeapon();
+        _canAttack = true;
+    }
+
+    public void DesactiveWeapon()
+    {
+        if(_weaponGameObject != null)
+            Destroy(_weaponGameObject);
+        weapon = null;
+        _weaponItem = null;
+    }
+
+    public void ActiveWeapon(ScriptableItem newWeapon)
+    {
+        DesactiveWeapon();
+        weapon = newWeapon;
+        if(weapon.prefab != null)
+        {
+            _weaponGameObject = Instantiate(weapon.prefab, transform);
+            Generics.FamilyTryGetComponent(_weaponGameObject, out _weaponItem);
+        }
     }
 
     void Attack()
     {
-        Debug.Log("Attack");
-        var collisions = Physics.OverlapSphere(attackPoint.position, attackRange);
+        if(!_canAttack || _weaponItem == null)
+            return;
+
+        _canAttack = false;
+        Invoke(nameof(CooldownAttack), _weaponItem.attackCooldown);
+        attack?.Invoke(_weaponItem.attackCooldown);
+
+        var collisions = Physics.OverlapSphere(attackPoint.position, _weaponItem.range);
         foreach (var collision in collisions)
         {
             if (Generics.FamilyTryGetComponent(collision.gameObject, out HPController hpController) && hpController.gameObject.tag == "Enemy")
-                hpController.LoseHP(1);
+                hpController.LoseHP(_weaponItem.damage);
         }
     }
 
+    void CooldownAttack() => _canAttack = true;
+
     private void OnDrawGizmosSelected()
     {
-        if (attackPoint == null)
+        if (attackPoint == null || _weaponItem == null)
             return;
 
-        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+        Gizmos.DrawSphere(attackPoint.position, _weaponItem.range);
     }
 
     void OnDestroy()

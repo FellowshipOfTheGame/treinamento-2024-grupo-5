@@ -7,6 +7,8 @@ TagManager:
   - Arrow
   - Enemy
   - Health Pack
+  - Key
+  - Door
   layers:
   - Default
   - TransparentFX
