@@ -23,6 +23,9 @@ public class HPController : MonoBehaviour
             HPBar.fillAmount = (float)CurrentHP / MaxHP;
     }
 
+    public int getMaxHP() { return MaxHP; }
+    public int getCurrentHP() { return CurrentHP; }
+
     public void LoseHP(int Damage)
     {
         Debug.Log($"{name} perdeu vida");
@@ -57,9 +60,6 @@ public class HPController : MonoBehaviour
         {
             LoseHP(10); 
 
-        }else if (collision.gameObject.CompareTag("Health Pack"))
-        {
-            GainHP(10);
         }
     }
 
