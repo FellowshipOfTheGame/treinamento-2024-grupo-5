@@ -4879,11 +4879,6 @@ Transform:
   - {fileID: 1131925927}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1088662508 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7963807464837362964, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
-  m_PrefabInstance: {fileID: 1957190523}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1131925926
 GameObject:
   m_ObjectHideFlags: 0
@@ -6364,30 +6359,6 @@ PrefabInstance:
     - target: {fileID: 2011618612083841723, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
       propertyPath: m_Name
       value: Archer
-      objectReference: {fileID: 0}
-    - target: {fileID: 2011618612083841723, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
-      propertyPath: m_Layer
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 2011618612083841723, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2011618612083841723, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
-    - target: {fileID: 6274030693101913467, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
-      propertyPath: m_Layer
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 6328891069642210995, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
-      propertyPath: firePoint
-      value: 
-      objectReference: {fileID: 1088662508}
-    - target: {fileID: 6328891069642210995, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
-      propertyPath: attackCooldown
-      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7963807464837362964, guid: 443ca143aa3ebbf4eb0952ec478bbce9, type: 3}
       propertyPath: m_LocalPosition.x

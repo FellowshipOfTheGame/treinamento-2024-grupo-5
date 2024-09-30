@@ -1,81 +1,84 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
-// To Do
-// Se o arqueiro não conseguir ver o player ele deve se mover até conseguir ver ele
-// Se o player chegar muito perto ele se afasta
-// Melhorar comportamento das flechas
+using UnityEngine.AI;
 
 public class Archer : MonoBehaviour
 {
     [SerializeField] private GameObject arrowPrefab; // Prefab da flecha
+    [SerializeField] private float movementSpeed;
     [SerializeField] private Transform firePoint; // Ponto de origem da flecha
-    [SerializeField] private float shootInterval = 2f; // Intervalo entre disparos
     [SerializeField] private float arrowSpeed = 10f; // Velocidade da flecha
     [SerializeField] private float detectionRange = 20f;
     [SerializeField] private float losePlayerRange = 30f;
     [SerializeField] private float attackCooldown = 4f;
     
-    private Transform player; // Referência ao jogador
-    private bool isPlayerDetected;
-    private bool shoot;
-    private bool canShoot = true;
-    private Coroutine shootCoroutine;
+    private Transform _player; // Referência ao jogador
+    private bool _isPlayerDetected;
+    private bool _shoot;
+    private bool _canShoot = true;
+    private Coroutine _shootCoroutine;
+    private NavMeshAgent _agent;
+    
+    // Otimizar visão do player
     
     // Start is called before the first frame update
     void Start()
     {
-        player = GameObject.FindWithTag("Player").transform;
+        _player = GameObject.FindWithTag("Player").transform;
+        _agent = GetComponent<NavMeshAgent>();
+        _agent.speed = movementSpeed;
     }
 
     // Update is called once per frame
     void LateUpdate()
     {
-        if (!player) return;
+        if (!_player) return;
         
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector3.Distance(transform.position, _player.position);
         
         VerifyPlayerDistance(distanceToPlayer);
 
-        if (!isPlayerDetected) 
+        if (!_isPlayerDetected) 
             return;
         
         Debug.Log("Has Line = " + HasLineOfSightToPlayer());
         if (HasLineOfSightToPlayer())
         {
-            Vector3 direction = player.position - transform.position;
+            _agent.isStopped = true;
+            Vector3 direction = _player.position - transform.position;
             direction.y = 0;
             transform.rotation = Quaternion.LookRotation(direction);
 
-            if (canShoot && shootCoroutine == null)
+            if (_canShoot && _shootCoroutine == null)
             {
-                shootCoroutine = StartCoroutine(Shoot());
+                _shootCoroutine = StartCoroutine(Shoot());
             }
         }
         else
         {
             StopShooting();
-            // Implemente aqui a lógica para se mover em direção ao Player
+            _agent.isStopped = false;
+            _agent.destination = _player.position;
         }
     }
 
     void VerifyPlayerDistance(float distanceToPlayer)
     {
-        if (distanceToPlayer <= detectionRange)
+        if (distanceToPlayer <= detectionRange && HasLineOfSightToPlayer())
         {
-            isPlayerDetected = true;
+            _isPlayerDetected = true;
         }
         else if (distanceToPlayer > losePlayerRange)
         {
-            isPlayerDetected = false;
+            _isPlayerDetected = false;
         }
     }
 
     bool HasLineOfSightToPlayer()
     {
         RaycastHit hit;
-        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+        Vector3 directionToPlayer = (_player.position - transform.position).normalized;
 
         if (Physics.Raycast(transform.position, directionToPlayer, out hit, detectionRange))
         {
@@ -84,7 +87,7 @@ public class Archer : MonoBehaviour
                 return true;
             }
             
-            return hit.transform.CompareTag(player.tag);
+            return hit.transform.CompareTag(_player.tag);
         }
 
         return false;
@@ -92,15 +95,15 @@ public class Archer : MonoBehaviour
 
     IEnumerator Shoot()
     {
-        while (isPlayerDetected && HasLineOfSightToPlayer())
+        while (_isPlayerDetected && HasLineOfSightToPlayer())
         {
             ShootArrow();
-            canShoot = false;
+            _canShoot = false;
             yield return new WaitForSeconds(attackCooldown);
-            canShoot = true;
+            _canShoot = true;
         }
 
-        shootCoroutine = null;
+        _shootCoroutine = null;
     }
     
     void ShootArrow()
@@ -112,23 +115,17 @@ public class Archer : MonoBehaviour
     
     void StopShooting()
     {
-        if (shootCoroutine != null)
+        if (_shootCoroutine != null)
         {
-            StopCoroutine(shootCoroutine);
-            shootCoroutine = null;
+            StopCoroutine(_shootCoroutine);
+            _shootCoroutine = null;
         }
-        canShoot = true;
+        _canShoot = true;
     }
     
     private Vector3 GetAimDirection()
     {
-        Vector3 direction = (player.position - firePoint.position);
-        
-        // Calcular a diferença de altura
-        float heightDifference = player.position.y - firePoint.position.y;
-
-        // Ajustar o ângulo de inclinação para compensar a gravidade
-        // direction.y += heightDifference * 0.5f;  // Multiplicador para ajuste fino
+        Vector3 direction = (_player.position - firePoint.position);
 
         return direction.normalized;
     }
