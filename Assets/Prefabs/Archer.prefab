@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 6833561295050618257}
   - component: {fileID: 3005097813417454673}
   - component: {fileID: 6328891069642210995}
-  m_Layer: 10
+  m_Layer: 8
   m_Name: Archer
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2011618612083841723}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -8.79, y: 1.02, z: 48.78}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -122,9 +122,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   arrowPrefab: {fileID: 6391150078930980113, guid: 8e4502b66a482fd40aad57c2579b8fe5, type: 3}
-  firePoint: {fileID: 7421211513633719559}
+  firePoint: {fileID: 7963807464837362964}
   shootInterval: 2
   arrowSpeed: 50
+  detectionRange: 20
+  losePlayerRange: 30
+  attackCooldown: 2
 --- !u!1 &6274030693101913467
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,7 +137,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7421211513633719559}
-  m_Layer: 10
+  m_Layer: 8
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}

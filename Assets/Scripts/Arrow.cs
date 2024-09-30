@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Arrow : MonoBehaviour
 {
-    public float gravity;
+    [SerializeField] private float gravity;
     private Vector3 velocity;
 
     void Start()
@@ -25,14 +25,14 @@ public class Arrow : MonoBehaviour
     
     private void OnCollisionEnter(Collision other)
     {
-        Debug.Log(other.gameObject.tag);
+        //Debug.Log(other.gameObject.tag);
         GetComponent<Rigidbody>().isKinematic = true;
         
         if (other.gameObject.CompareTag("Player"))
         {
-            Debug.Log("Acertou o player");
+            //Debug.Log("Acertou o player");
         }
         
-        Destroy(gameObject, 2f);
+        Destroy(gameObject);
     }
 }

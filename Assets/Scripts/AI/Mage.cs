@@ -2,12 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// To Do
-// Se o arqueiro não conseguir ver o player ele deve se mover até conseguir ver ele
-// Se o player chegar muito perto ele se afasta
-// Melhorar comportamento das flechas
-
-public class Archer : MonoBehaviour
+public class Mage : MonoBehaviour
 {
     [SerializeField] private GameObject arrowPrefab; // Prefab da flecha
     [SerializeField] private Transform firePoint; // Ponto de origem da flecha
@@ -20,8 +15,6 @@ public class Archer : MonoBehaviour
     private Transform player; // Referência ao jogador
     private bool isPlayerDetected;
     private bool shoot;
-    private bool canShoot = true;
-    private Coroutine shootCoroutine;
     
     // Start is called before the first frame update
     void Start()
@@ -30,7 +23,7 @@ public class Archer : MonoBehaviour
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    void Update()
     {
         if (!player) return;
         
@@ -41,22 +34,24 @@ public class Archer : MonoBehaviour
         if (!isPlayerDetected) 
             return;
         
-        Debug.Log("Has Line = " + HasLineOfSightToPlayer());
         if (HasLineOfSightToPlayer())
         {
+            // O arqueiro vira para o jogador
             Vector3 direction = player.position - transform.position;
-            direction.y = 0;
+            direction.y = 0; // Evita que o arqueiro olhe para cima/baixo
             transform.rotation = Quaternion.LookRotation(direction);
 
-            if (canShoot && shootCoroutine == null)
+            if (shoot == false)
             {
-                shootCoroutine = StartCoroutine(Shoot());
+                shoot = true;
+                StartCoroutine(Shoot());
             }
         }
         else
         {
-            StopShooting();
-            // Implemente aqui a lógica para se mover em direção ao Player
+            // Se mover em direção ao Player
+
+            shoot = false;
         }
     }
 
@@ -79,12 +74,7 @@ public class Archer : MonoBehaviour
 
         if (Physics.Raycast(transform.position, directionToPlayer, out hit, detectionRange))
         {
-            if (hit.transform.CompareTag(arrowPrefab.transform.tag))
-            {
-                return true;
-            }
-            
-            return hit.transform.CompareTag(player.tag);
+            return hit.transform == player;
         }
 
         return false;
@@ -92,15 +82,14 @@ public class Archer : MonoBehaviour
 
     IEnumerator Shoot()
     {
-        while (isPlayerDetected && HasLineOfSightToPlayer())
+        while (shoot)
         {
+            Debug.Log("Atirar");
             ShootArrow();
-            canShoot = false;
             yield return new WaitForSeconds(attackCooldown);
-            canShoot = true;
         }
 
-        shootCoroutine = null;
+        yield return null;
     }
     
     void ShootArrow()
@@ -108,16 +97,6 @@ public class Archer : MonoBehaviour
         Vector3 direction = GetAimDirection();
         GameObject arrow = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
         arrow.GetComponent<Rigidbody>().velocity = direction * arrowSpeed;
-    }
-    
-    void StopShooting()
-    {
-        if (shootCoroutine != null)
-        {
-            StopCoroutine(shootCoroutine);
-            shootCoroutine = null;
-        }
-        canShoot = true;
     }
     
     private Vector3 GetAimDirection()
