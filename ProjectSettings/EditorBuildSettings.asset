@@ -8,4 +8,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TestSceneAlecx Modified.unity
     guid: 875768fc48b3f854fae6808b7b782628
+  - enabled: 1
+    path: Assets/Scenes/TelaDerrota.unity
+    guid: f0ce3fbc75a621a4fbfea23c4f3b58cb
+  - enabled: 1
+    path: Assets/Scenes/TestScene.unity
+    guid: d882a2b0d93ba294cac271e616e822fe
   m_configObjects: {}

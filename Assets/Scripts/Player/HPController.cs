@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -33,7 +34,7 @@ public class HPController : MonoBehaviour
 
         if (CurrentHP <= 0) // Condicao de derrota
         {
-            // GameOver();
+            GameOver();
             Debug.Log("Game Over");
         }
     }
@@ -50,7 +51,28 @@ public class HPController : MonoBehaviour
 
     public void GameOver()
     {
-        
+        // Encontra o objeto com a tag "GameController"
+        GameObject gameController = GameObject.FindWithTag("GameController");
+
+        if (gameController != null)
+        {
+            // Acessa o componente MenuController
+            MenuController menuController = gameController.GetComponent<MenuController>();
+
+            if (menuController != null)
+            {
+                // Chama o método GameOver no MenuController
+                menuController.GameOver();
+            }
+            else
+            {
+                Debug.LogError("O GameObject com a tag 'GameController' não possui o componente MenuController.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Nenhum GameObject com a tag 'GameController' foi encontrado.");
+        }
     }
 
     public void ResetHP()
@@ -65,6 +87,15 @@ public class HPController : MonoBehaviour
         {
             LoseHP(10); 
 
+        }
+        else if (collision.gameObject.CompareTag("Win"))
+        {
+            GameObject gameController = GameObject.FindGameObjectWithTag("GameController");
+            if (gameController != null)
+            {
+                gameController.GetComponent<MenuController>().Victory();
+                
+            }
         }
     }
 

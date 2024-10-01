@@ -1,5 +1,6 @@
 using System;
 using Mantega;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class FirstPerson : MonoBehaviour
@@ -14,6 +15,8 @@ public class FirstPerson : MonoBehaviour
     [SerializeField] private float verticalSense = 1;
     public int baseFOV = 100;
     // bool invert_y_axis
+
+    private bool canMove = true;
 
     public float _zRotation = 0f;
     private float _xRotation = 0f;
@@ -30,7 +33,10 @@ public class FirstPerson : MonoBehaviour
 
     void Update()
     {
-        RotateWithMouse();
+        if (canMove)
+        {
+            RotateWithMouse();
+        }
     }
 
     private void LateUpdate()
@@ -58,4 +64,15 @@ public class FirstPerson : MonoBehaviour
     public float GetFOV() => firstPersonCamera.fieldOfView;
 
     public void SetZRotation(float zRotation) => _zRotation = zRotation;
+
+    public void StopCameraMovement()
+    {
+        canMove = false; // Impede a câmera de se mover
+    }
+
+    // Método para permitir a movimentação da câmera novamente
+    public void ResumeCameraMovement()
+    {
+        canMove = true; // Permite a câmera se mover
+    }
 }
