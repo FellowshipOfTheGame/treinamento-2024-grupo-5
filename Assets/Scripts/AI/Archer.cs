@@ -42,7 +42,6 @@ public class Archer : MonoBehaviour
         if (!_isPlayerDetected) 
             return;
         
-        Debug.Log("Has Line = " + HasLineOfSightToPlayer());
         if (HasLineOfSightToPlayer())
         {
             _agent.isStopped = true;

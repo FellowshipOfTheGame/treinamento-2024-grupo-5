@@ -6,6 +6,7 @@ using UnityEngine;
 public class Arrow : MonoBehaviour
 {
     [SerializeField] private float gravity;
+    [SerializeField] private float damange;
     private Vector3 velocity;
 
     void Start()

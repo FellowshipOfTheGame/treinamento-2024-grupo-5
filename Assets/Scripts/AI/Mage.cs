@@ -1,80 +1,90 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Mage : MonoBehaviour
 {
     [SerializeField] private GameObject arrowPrefab; // Prefab da flecha
+    [SerializeField] private float movementSpeed;
     [SerializeField] private Transform firePoint; // Ponto de origem da flecha
-    [SerializeField] private float shootInterval = 2f; // Intervalo entre disparos
     [SerializeField] private float arrowSpeed = 10f; // Velocidade da flecha
+    [SerializeField] private float magicBallTimer = 10f;
     [SerializeField] private float detectionRange = 20f;
     [SerializeField] private float losePlayerRange = 30f;
     [SerializeField] private float attackCooldown = 4f;
     
-    private Transform player; // Referência ao jogador
-    private bool isPlayerDetected;
-    private bool shoot;
+    private Transform _player; // Referência ao jogador
+    private bool _isPlayerDetected;
+    private bool _shoot;
+    private bool _canShoot = true;
+    private Coroutine _shootCoroutine;
+    private NavMeshAgent _agent;
     
-    // Start is called before the first frame update
     void Start()
     {
-        player = GameObject.FindWithTag("Player").transform;
+        _player = GameObject.FindWithTag("Player").transform;
+        _agent = GetComponent<NavMeshAgent>();
+        _agent.speed = movementSpeed;
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
-        if (!player) return;
+        if (!_player) return;
         
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector3.Distance(transform.position, _player.position);
         
         VerifyPlayerDistance(distanceToPlayer);
 
-        if (!isPlayerDetected) 
+        if (!_isPlayerDetected) 
             return;
         
         if (HasLineOfSightToPlayer())
         {
-            // O arqueiro vira para o jogador
-            Vector3 direction = player.position - transform.position;
-            direction.y = 0; // Evita que o arqueiro olhe para cima/baixo
+            _agent.isStopped = true;
+            Vector3 direction = _player.position - transform.position;
+            direction.y = 0;
             transform.rotation = Quaternion.LookRotation(direction);
 
-            if (shoot == false)
+            if (_canShoot && _shootCoroutine == null)
             {
-                shoot = true;
-                StartCoroutine(Shoot());
+                _shootCoroutine = StartCoroutine(Shoot());
             }
         }
         else
         {
-            // Se mover em direção ao Player
-
-            shoot = false;
+            StopShooting();
+            _agent.isStopped = false;
+            _agent.destination = _player.position;
         }
     }
 
     void VerifyPlayerDistance(float distanceToPlayer)
     {
-        if (distanceToPlayer <= detectionRange)
+        if (distanceToPlayer <= detectionRange && HasLineOfSightToPlayer())
         {
-            isPlayerDetected = true;
+            _isPlayerDetected = true;
         }
         else if (distanceToPlayer > losePlayerRange)
         {
-            isPlayerDetected = false;
+            _isPlayerDetected = false;
         }
     }
 
     bool HasLineOfSightToPlayer()
     {
         RaycastHit hit;
-        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+        Vector3 directionToPlayer = (_player.position - transform.position).normalized;
 
         if (Physics.Raycast(transform.position, directionToPlayer, out hit, detectionRange))
         {
-            return hit.transform == player;
+            if (hit.transform.CompareTag(arrowPrefab.transform.tag))
+            {
+                return true;
+            }
+            
+            return hit.transform.CompareTag(_player.tag);
         }
 
         return false;
@@ -82,32 +92,36 @@ public class Mage : MonoBehaviour
 
     IEnumerator Shoot()
     {
-        while (shoot)
+        while (_isPlayerDetected && HasLineOfSightToPlayer())
         {
-            Debug.Log("Atirar");
             ShootArrow();
+            _canShoot = false;
             yield return new WaitForSeconds(attackCooldown);
+            _canShoot = true;
         }
 
-        yield return null;
+        _shootCoroutine = null;
     }
     
     void ShootArrow()
     {
-        Vector3 direction = GetAimDirection();
         GameObject arrow = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
-        arrow.GetComponent<Rigidbody>().velocity = direction * arrowSpeed;
+        arrow.GetComponent<MagicBall>().Initialize(_player, arrowSpeed, magicBallTimer);
+    }
+    
+    void StopShooting()
+    {
+        if (_shootCoroutine != null)
+        {
+            StopCoroutine(_shootCoroutine);
+            _shootCoroutine = null;
+        }
+        _canShoot = true;
     }
     
     private Vector3 GetAimDirection()
     {
-        Vector3 direction = (player.position - firePoint.position);
-        
-        // Calcular a diferença de altura
-        float heightDifference = player.position.y - firePoint.position.y;
-
-        // Ajustar o ângulo de inclinação para compensar a gravidade
-        // direction.y += heightDifference * 0.5f;  // Multiplicador para ajuste fino
+        Vector3 direction = (_player.position - firePoint.position);
 
         return direction.normalized;
     }

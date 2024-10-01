@@ -12,10 +12,10 @@ GameObject:
   - component: {fileID: 522704949000080413}
   - component: {fileID: 1066316672450091313}
   - component: {fileID: 3598572967822841074}
-  - component: {fileID: 806883669307377487}
   - component: {fileID: 2598311491702866491}
+  - component: {fileID: 9167827142989191040}
   m_Layer: 10
-  m_Name: Arrow
+  m_Name: MagicBall
   m_TagString: Arrow
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -64,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 545c0e0afc6dffe4989af815ed500723, type: 2}
+  - {fileID: 2100000, guid: 49ae8430d4e983040a200218ccfafef1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -113,19 +113,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 1
---- !u!114 &806883669307377487
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6391150078930980113}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 079f4e91d3a17fc40bb5ff38ce1bceca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gravity: 0
 --- !u!135 &2598311491702866491
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -147,3 +134,15 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &9167827142989191040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6391150078930980113}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2af974cba262e4e429a71ac308bfc93d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
