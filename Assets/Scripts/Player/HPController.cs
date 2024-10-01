@@ -85,7 +85,7 @@ public class HPController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Enemy"))
         {
-            LoseHP(60); 
+            LoseHP(10); 
 
         }
         else if (collision.gameObject.CompareTag("Win"))
