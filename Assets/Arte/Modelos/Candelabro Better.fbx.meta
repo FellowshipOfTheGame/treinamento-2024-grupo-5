@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 14ce3bda3e3135147aa722886775fcf5
+guid: a2e3a62abd04cba44a77d43d72b4f97c
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,18 +7,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: ArrowHead
-    second: {fileID: 2100000, guid: 1e12b4d378f6bfe409075a16a9798718, type: 2}
+      name: Candelabro Base
+    second: {fileID: 2100000, guid: cfbca704e92d6a74ebff40e60acade44, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Back Thingy
-    second: {fileID: 2100000, guid: 540c0694ee0332e4eb2bea6ded51c50b, type: 2}
+      name: Candelabro Vela
+    second: {fileID: 2100000, guid: c0704e8a963e35046af854f4dd335fee, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Shaft
-    second: {fileID: 2100000, guid: 6020415d131ffe24f957eae079b332f7, type: 2}
+      name: Candelabro Vela Luz
+    second: {fileID: 2100000, guid: 7f4ab1eaeb856b14982260f1e0dff105, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -52,7 +52,7 @@ ModelImporter:
     lODScreenPercentages: []
     globalScale: 1
     meshCompression: 0
-    addColliders: 1
+    addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
     importPhysicalCameras: 1

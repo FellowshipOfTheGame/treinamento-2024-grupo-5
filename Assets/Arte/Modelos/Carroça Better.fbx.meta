@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 070360b921f846146986d9e656ea22a2
+guid: 0eee58584b2e1a54cacbff4e4595f075
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,13 +7,13 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Column Black
-    second: {fileID: 2100000, guid: bd534bb343e849e4ea3d7345a29eb16e, type: 2}
+      name: Metal
+    second: {fileID: 2100000, guid: a959870d277c29a46b1b4bc48ba78898, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Column Brick
-    second: {fileID: 2100000, guid: 4410fb9ad4fdb374cbd9598efd7f5de3, type: 2}
+      name: "Wood Carro\xE7a"
+    second: {fileID: 2100000, guid: 9e7714cfde0650d4c877977379a66235, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -47,7 +47,7 @@ ModelImporter:
     lODScreenPercentages: []
     globalScale: 1
     meshCompression: 0
-    addColliders: 1
+    addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
     importPhysicalCameras: 1
