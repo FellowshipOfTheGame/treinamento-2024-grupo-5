@@ -75,6 +75,11 @@ public class HPController : MonoBehaviour
         }
     }
 
+    public void ResetHP()
+    {
+        CurrentHP = MaxHP;
+    }
+
     //Funcao para testar perda de vida e cura quando toca em inimigo
     void OnCollisionEnter(Collision collision)
     {
