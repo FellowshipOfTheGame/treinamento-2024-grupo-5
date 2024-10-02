@@ -7,13 +7,16 @@ public class HealthPackController : MonoBehaviour
     [SerializeField] private int healing;  
     [SerializeField] private float cooldown;
 
-    private Renderer healthPackRenderer;
+    private Renderer[] childRenderers;
     private Collider healthPackCollider;
 
     private void Start()
     {
-        healthPackRenderer = GetComponent<Renderer>();
+        // Obtém o Collider do objeto pai
         healthPackCollider = GetComponent<Collider>();
+
+        // Obtém todos os Renderers dos filhos
+        childRenderers = GetComponentsInChildren<Renderer>();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -48,15 +51,23 @@ public class HealthPackController : MonoBehaviour
     IEnumerator RespawnHealthPack()
     {
         // desativa renderizador e collider
-        healthPackRenderer.enabled = false;
+        foreach (Renderer rend in childRenderers)
+        {
+            rend.enabled = false;
+        }
+
+        // Desativa o Collider do pai
         healthPackCollider.enabled = false;
-        Debug.Log("Health Pack em cooldown");
 
         // espera o cooldown
         yield return new WaitForSeconds(cooldown);
 
-        // reativa renderizador e collider
-        healthPackRenderer.enabled = true;
+        foreach (Renderer rend in childRenderers)
+        {
+            rend.enabled = true;
+        }
+
+        // Reativa o Collider do pai
         healthPackCollider.enabled = true;
         Debug.Log("Health Pack reapareceu");
     }
