@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3005097813417454673}
   - component: {fileID: 6328891069642210995}
   - component: {fileID: 2579245719526107548}
+  - component: {fileID: 2417125762148415169}
   m_Layer: 8
   m_Name: Archer
   m_TagString: Enemy
@@ -151,6 +152,20 @@ NavMeshAgent:
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &2417125762148415169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2011618612083841723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10ccc9d1148b42a4f9cd3fc31e66f5b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hp: 1
+  HPBar: {fileID: 0}
 --- !u!1 &6274030693101913467
 GameObject:
   m_ObjectHideFlags: 0

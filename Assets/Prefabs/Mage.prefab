@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 6130776321248650541}
   - component: {fileID: 1560712115875303027}
   - component: {fileID: 947784863285966411}
+  - component: {fileID: 4031209750971728930}
   m_Layer: 8
   m_Name: Mage
   m_TagString: Enemy
@@ -183,3 +184,17 @@ MonoBehaviour:
   detectionRange: 20
   losePlayerRange: 30
   attackCooldown: 4
+--- !u!114 &4031209750971728930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7637119447340838438}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10ccc9d1148b42a4f9cd3fc31e66f5b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hp: 1
+  HPBar: {fileID: 0}

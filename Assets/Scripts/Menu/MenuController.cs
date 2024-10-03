@@ -49,6 +49,8 @@ public class MenuController : MonoBehaviour
             cameraController.StopCameraMovement();
         }
 
+        GetComponent<SoundEffectsController>().PlayGameOverSound();
+
         Time.timeScale = 0;
     }
 
@@ -61,6 +63,8 @@ public class MenuController : MonoBehaviour
         {
             cameraController.StopCameraMovement();
         }
+
+        GetComponent<SoundEffectsController>().PlayVictorySound();
 
         Time.timeScale = 0;
     }

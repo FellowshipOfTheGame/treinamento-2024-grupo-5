@@ -37,6 +37,10 @@ public class HPController : MonoBehaviour
             GameOver();
             Debug.Log("Game Over");
         }
+        else
+        {
+            GetComponent<PlayerSoundEffects>().PlayTakeDamageSound();
+        }
     }
 
     public void GainHP(int HPGained)
@@ -47,6 +51,8 @@ public class HPController : MonoBehaviour
         {
             CurrentHP = MaxHP;  
         }
+
+        GetComponent<PlayerSoundEffects>().PlayHealingSound();
     }
 
     public void GameOver()

@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 2726432748818423876}
   - component: {fileID: 7091497508831322508}
   - component: {fileID: 7446276357653160459}
+  - component: {fileID: 8808640250962441536}
   m_Layer: 10
   m_Name: Warrior
   m_TagString: Untagged
@@ -175,3 +176,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c19c80801ee104f478fbd6cee0e6632d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8808640250962441536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5717641354706634005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10ccc9d1148b42a4f9cd3fc31e66f5b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hp: 1
+  HPBar: {fileID: 0}
