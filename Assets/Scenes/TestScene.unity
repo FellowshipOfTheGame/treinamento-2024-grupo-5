@@ -13013,6 +13013,14 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 582460828412503522, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
+      propertyPath: keySound
+      value: 
+      objectReference: {fileID: 8300000, guid: 14b4a0925299a81499d3566b7cfbbf89, type: 3}
+    - target: {fileID: 582460828412503522, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
+      propertyPath: doorSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 14cfe5f949aca3146b8a4d9ce259a982, type: 3}
+    - target: {fileID: 582460828412503522, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
       propertyPath: healingSound
       value: 
       objectReference: {fileID: 8300000, guid: c3d4143da6b25194a95ffd964792a975, type: 3}

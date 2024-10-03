@@ -63,11 +63,13 @@ public class PlayerAttack : MonoBehaviour
         Invoke(nameof(CooldownAttack), _weaponItem.attackCooldown);
         attack?.Invoke(_weaponItem.attackCooldown);
 
+        GetComponent<PlayerSoundEffects>().PlayAtackSound();
+
         var collisions = Physics.OverlapSphere(attackPoint.position, _weaponItem.range);
         foreach (var collision in collisions)
         {
-            if (Generics.FamilyTryGetComponent(collision.gameObject, out HPController hpController) && hpController.gameObject.tag == "Enemy")
-                hpController.LoseHP(_weaponItem.damage);
+            if (Generics.FamilyTryGetComponent(collision.gameObject, out EnemyHPController hpController) && hpController.gameObject.tag == "Enemy")
+                hpController.TakeDamage();
         }
     }
 

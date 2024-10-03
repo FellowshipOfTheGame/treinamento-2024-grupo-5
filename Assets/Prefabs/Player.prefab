@@ -387,7 +387,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b5402bf03db6f94eba812b21a722f05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInput: {fileID: 0}
+  playerInput: {fileID: 7551316284096253634}
   attackPoint: {fileID: 1047143529578504164}
   _canAttack: 1
   weapon: {fileID: 11400000, guid: b73319ff41949104fb68b2ba76e1a4ef, type: 2}
@@ -405,7 +405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ec79ce7ce2f0aa45abbbd8c4fc8acca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  keys: 0
+  keys: []
   playerAttack: {fileID: 0}
   playerMovement: {fileID: 0}
   playerHealth: {fileID: 0}
@@ -425,6 +425,7 @@ MonoBehaviour:
   src: {fileID: 3558022969376472899}
   takeDamageSound: {fileID: 8300000, guid: adaaffee12518e14994e0bc2a79f0a3b, type: 3}
   healingSound: {fileID: 8300000, guid: 7f1a2a2d5f6e36642bf391b1fd8896ab, type: 3}
+  atackSound: {fileID: 8300000, guid: fddc32db3b5043a4b887910f253a559f, type: 3}
 --- !u!1 &5206316460320065083
 GameObject:
   m_ObjectHideFlags: 0
@@ -451,7 +452,7 @@ Transform:
   m_GameObject: {fileID: 5206316460320065083}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.7288284, y: -36.629967, z: -18.770226}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

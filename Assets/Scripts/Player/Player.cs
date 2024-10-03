@@ -51,13 +51,24 @@ public class Player : MonoBehaviour
             {
                 if (door.IsDoorKey(key))
                 {
+                    GameObject.FindWithTag("Player").GetComponent<PlayerSoundEffects>().PlayDoorSound();
                     keys.Remove(key);
                     key.UseKey();
-                    door.GoToNextLevel();
-                    break;
+
+                    
+                    // Inicia a coroutine para esperar 1 segundo antes de ir para o próximo nível
+                    StartCoroutine(WaitAndGoToNextLevel(door));
+
+                    
                 }
             }
         }
+    }
+
+    private IEnumerator WaitAndGoToNextLevel(Door door)
+    {
+        yield return new WaitForSeconds(1.5f); // Espera 1 segundo
+        door.GoToNextLevel(); // Vai para o próximo nível
     }
 
     private void OnTriggerEnter(Collider other)
@@ -67,6 +78,7 @@ public class Player : MonoBehaviour
         {
             key.GetKey();
             keys.Add(key);
+            GameObject.FindWithTag("Player").GetComponent<PlayerSoundEffects>().PlayKeySound();
         }
     }
 }
