@@ -6,7 +6,7 @@ using Mantega;
 public class Player : MonoBehaviour
 {
     [Header("Game")]
-    public int keys = 0;
+    public List<Key> keys = new();
 
     [Header("Player")]
     [SerializeField] private PlayerAttack playerAttack;
@@ -33,7 +33,7 @@ public class Player : MonoBehaviour
     public void ResetPlayer() => ResetPlayer(transform.position);
     public void ResetPlayer(Vector2 spawn)
     {
-        keys = 0;
+        keys.Clear();
 
         playerHealth.ResetHP();
         playerAttack.ResetAttack();
@@ -45,22 +45,28 @@ public class Player : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         GameObject gam = collision.gameObject;
-        if (keys > 0 && gam.CompareTag("Door"))
+        if (gam.TryGetComponent(out Door door))
         {
-            Destroy(gam);
-            keys--;
+            foreach (Key key in keys)
+            {
+                if (door.IsDoorKey(key))
+                {
+                    keys.Remove(key);
+                    key.UseKey();
+                    door.GoToNextLevel();
+                    break;
+                }
+            }
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
         GameObject gam = other.gameObject;
-        Debug.Log(gam.name);
-        Debug.Log(gam.tag);
-        if (gam.CompareTag("Key"))
+        if (gam.TryGetComponent(out Key key))
         {
-            Destroy(gam);
-            keys++;
+            key.GetKey();
+            keys.Add(key);
         }
     }
 }
