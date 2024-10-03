@@ -77,6 +77,7 @@ public class Player : MonoBehaviour
         if (gam.TryGetComponent(out Key key))
         {
             key.GetKey();
+            key.ShowUIKey();
             keys.Add(key);
             GameObject.FindWithTag("Player").GetComponent<PlayerSoundEffects>().PlayKeySound();
         }

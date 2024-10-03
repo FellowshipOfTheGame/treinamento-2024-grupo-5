@@ -38,12 +38,16 @@ public class EnemyHPController : MonoBehaviour
         {
             Die();
         }
-        
+
+        Debug.Log("Inimigo tomou dano");
+
     }
 
     public void Die()
     {
         // Fazer aqui comandos quando o inimigo morre
+        Debug.Log("Inimigo morreu");
+        Destroy(gameObject);
     }
 
     
