@@ -43,7 +43,7 @@ public class MagicBall : MonoBehaviour
         
         if (other.gameObject.CompareTag("Player"))
         {
-            Debug.Log("Acertou o jogador");
+            //Debug.Log("Acertou o jogador");
             other.gameObject.GetComponent<HPController>().LoseHP(damage);
             //other.gameObject.GetComponent<Transform>().parent.GetComponentInParent<HPController>().LoseHP(damage);
         }

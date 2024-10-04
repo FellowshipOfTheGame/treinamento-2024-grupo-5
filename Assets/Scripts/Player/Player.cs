@@ -12,6 +12,7 @@ public class Player : MonoBehaviour
     [SerializeField] private PlayerAttack playerAttack;
     [SerializeField] private PlayerMovement playerMovement;
     [SerializeField] private HPController playerHealth;
+    [SerializeField] private PlayerSoundEffects playerSoundEffects;
 
     [Header("Weapon")]
     [SerializeField] private ScriptableItem basicWeapon;
@@ -20,14 +21,15 @@ public class Player : MonoBehaviour
     {
         if(playerAttack == null)
             Generics.FamilyTryGetComponent(gameObject, out playerAttack);
-        playerAttack.ResetAttack();
 
         if (playerMovement == null)
             Generics.FamilyTryGetComponent(gameObject, out playerMovement);
 
         if (playerHealth == null)
             Generics.FamilyTryGetComponent(gameObject, out playerHealth);
-        playerHealth.ResetHP();
+
+        if(playerSoundEffects == null)
+            Generics.FamilyTryGetComponent(gameObject, out playerSoundEffects);
     }
 
     public void ResetPlayer() => ResetPlayer(transform.position);
@@ -50,14 +52,15 @@ public class Player : MonoBehaviour
             foreach (Key key in keys)
             {
                 if (door.IsDoorKey(key))
-                {
-                    GameObject.FindWithTag("Player").GetComponent<PlayerSoundEffects>().PlayDoorSound();
+                { 
+                    playerSoundEffects.PlayDoorSound();
                     keys.Remove(key);
                     key.UseKey();
 
                     
-                    // Inicia a coroutine para esperar 1 segundo antes de ir para o próximo nível
+                    // Inicia a coroutine para esperar 1 segundo antes de ir para o prï¿½ximo nï¿½vel
                     StartCoroutine(WaitAndGoToNextLevel(door));
+                    break;
                 }
             }
         }
@@ -77,8 +80,7 @@ public class Player : MonoBehaviour
             key.GetKey();
             key.ShowUIKey();
             keys.Add(key);
-            Debug.Log("Pegou chave");
-            GameObject.FindWithTag("Player").GetComponent<PlayerSoundEffects>().PlayKeySound();
+            playerSoundEffects.PlayKeySound();
         }
     }
 }

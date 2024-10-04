@@ -29,7 +29,7 @@ public class HPController : MonoBehaviour
 
     public void LoseHP(int Damage)
     {
-        Debug.Log($"{name} perdeu vida");
+        //Debug.Log($"{name} perdeu vida");
         CurrentHP -= Damage;
 
         if (CurrentHP <= 0) // Condicao de derrota
