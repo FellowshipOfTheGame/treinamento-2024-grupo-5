@@ -6,6 +6,8 @@ public class Dragon : MonoBehaviour
     [Header("General")] 
     [SerializeField] private float attackCooldown;
     [SerializeField] private float rotationSpeed;
+    [SerializeField] private LayerMask playerLayer;
+    [SerializeField] private Rigidbody rb;
 
     [Header("Melee attack")] 
     [SerializeField] private Transform meleeAttackPoint;
@@ -16,12 +18,15 @@ public class Dragon : MonoBehaviour
     [Header("Jump attack")] 
     [SerializeField] private int jumpDamage;
     [SerializeField] private float jumpRange;
+    [SerializeField] private float jumpDamageRange = 20f;
     [SerializeField] private float behindAngleThreshold = 200f;
-    [SerializeField] private GameObject shockwave;
+    [SerializeField] private float jumpDuration = 10f;
+    [SerializeField] private float jumpHeight = 15f;
+    /*[SerializeField] private GameObject shockwave;
     [SerializeField] private Shockwave _shockwave;
     [SerializeField] private float shockwaveForce;
     [SerializeField] private float shockwaveMaxHeight;
-    [SerializeField] private float shockwaveSpeed;
+    [SerializeField] private float shockwaveSpeed;*/
     
     [Header("Fire Breath")] 
     [SerializeField] private Transform breathingPoint;
@@ -34,6 +39,7 @@ public class Dragon : MonoBehaviour
     private Transform _playerTransform;
     private float _distanceToPlayer;
     private HPController _playerHealth;
+    private Vector3 _targetPosition;
     
     // Start is called before the first frame update
     void Start()
@@ -131,7 +137,53 @@ public class Dragon : MonoBehaviour
     {
         Debug.Log("Jump Attack");
         
-        _shockwave.StartRising();
+        StartCoroutine(JumpAttackCoroutine());
+    }
+    
+    IEnumerator JumpAttackCoroutine()
+    {
+        // Fase de salto
+        yield return StartCoroutine(PerformJump());
+
+        // Fase de queda e impacto
+        yield return StartCoroutine(PerformLanding());
+    }
+    
+    IEnumerator PerformJump()
+    {
+        Vector3 startPosition = transform.position;
+        _targetPosition = _playerTransform.position;
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < jumpDuration)
+        {
+            float t = elapsedTime / jumpDuration;
+            float height = Mathf.Sin(t * Mathf.PI) * jumpHeight;
+
+            transform.position = Vector3.Lerp(startPosition, _targetPosition, t) + Vector3.up * height;
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    IEnumerator PerformLanding()
+    {
+        transform.position = _targetPosition;
+
+        // Efeito de impacto
+        rb.AddForce(Vector3.down * 10f, ForceMode.Impulse);
+
+        // Verifica se o jogador está na área de impacto
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, jumpDamageRange, playerLayer);
+        foreach (var hitCollider in hitColliders)
+        {
+            _playerHealth.LoseHP(jumpDamage);
+        }
+
+        Debug.Log("Ataque de pulo concluído");
+        yield return null;
     }
 
     void FireBreathAttack()
