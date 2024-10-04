@@ -14,6 +14,7 @@ public class Arrow : MonoBehaviour
         _velocity = velocity;
 
         _playerHealthSystem = player.GetComponent<HPController>();
+        
     }
 
     void Update()
@@ -25,7 +26,12 @@ public class Arrow : MonoBehaviour
         // Alinhar a flecha na direção do movimento
         transform.rotation = Quaternion.LookRotation(_velocity);
     }
-    
+
+    private void LateUpdate()
+    {
+        transform.forward = -transform.right;
+    }
+
     private void OnCollisionEnter(Collision other)
     {
         Debug.Log(other.gameObject.tag);
