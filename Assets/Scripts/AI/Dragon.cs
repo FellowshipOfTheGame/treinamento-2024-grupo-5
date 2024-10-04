@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Dragon : MonoBehaviour
@@ -10,30 +9,38 @@ public class Dragon : MonoBehaviour
 
     [Header("Melee attack")] 
     [SerializeField] private Transform meleeAttackPoint;
-    [SerializeField] private float meleeDamage;
+    [SerializeField] private int meleeDamage;
     [SerializeField] private float meleeRange;
+    [SerializeField] private float meleeForce;
     
     [Header("Jump attack")] 
-    [SerializeField] private float jumpDamage;
+    [SerializeField] private int jumpDamage;
     [SerializeField] private float jumpRange;
-    [SerializeField] private float behindAngleThreshold = 120f;
+    [SerializeField] private float behindAngleThreshold = 200f;
+    [SerializeField] private GameObject shockwave;
+    [SerializeField] private Shockwave _shockwave;
+    [SerializeField] private float shockwaveForce;
+    [SerializeField] private float shockwaveMaxHeight;
+    [SerializeField] private float shockwaveSpeed;
     
     [Header("Fire Breath")] 
     [SerializeField] private Transform breathingPoint;
     [SerializeField] private float fireBreathAngle = 30f;
     [SerializeField] private float fireBreathDuration = 3f;
     [SerializeField] private float range;
-    [SerializeField] private float damage;
+    [SerializeField] private int damage;
     [SerializeField] private ParticleSystem fireBreathEffect;
 
     private Transform _playerTransform;
     private float _distanceToPlayer;
+    private HPController _playerHealth;
     
     // Start is called before the first frame update
     void Start()
     {
         _playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
-
+        _playerHealth = _playerTransform.gameObject.GetComponent<HPController>();
+        
         StartCoroutine(AttackCorotine());
     }
 
@@ -41,7 +48,7 @@ public class Dragon : MonoBehaviour
     void Update()
     {
         _distanceToPlayer = Vector3.Distance(transform.position, _playerTransform.position);
-        
+        // shockwave.transform.position = new Vector3(gameObject.transform.position.x, shockwave.transform.position.y, gameObject.transform.position.z);
         RotateTowardsPlayer();
     }
 
@@ -100,18 +107,31 @@ public class Dragon : MonoBehaviour
     void MeleeAttack()
     {
         Debug.Log("Melee Attack");
-        
-        // Dar dano
-        // Aplicar um pouco de repulsão
+
+        _playerHealth.LoseHP(meleeDamage);
+    }
+    
+    bool IsPlayerInRange()
+    {
+        Vector3 directionToTarget = (_playerTransform.position - transform.position).normalized;
+        float distanceToTarget = Vector3.Distance(transform.position, _playerTransform.position);
+
+        if (distanceToTarget <= meleeRange)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
     }
     
     void JumpAttack()
     {
         Debug.Log("Jump Attack");
         
-        // Subir
-        // Cair , talvez em uma posição anterior do jogador
-        // Levantar onde de choque
+        _shockwave.StartRising();
     }
 
     void FireBreathAttack()
@@ -152,13 +172,11 @@ public class Dragon : MonoBehaviour
 
             if (angle <= fireBreathAngle / 2 && directionToTarget.magnitude <= range)
             {
-                Debug.Log("Colisao Condirada");
-                
                 // Verifique se o objeto atingido é o jogador
-                if (hitCollider.CompareTag("Player"))
+                if (hitCollider.CompareTag("PlayerBody"))
                 {
                     Debug.Log("Jogador tomou dano");
-                    // Aplicar dano ao jogador aqui
+                    _playerHealth.LoseHP(damage);
                 }
             }
         }

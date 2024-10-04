@@ -21,6 +21,7 @@ public class Warrior : MonoBehaviour
     private Coroutine _attackCoroutine;
     private float _distanceToPlayer;
     private HPController _playerHealth;
+    private LayerMask _playerLayer;
     
     // Start is called before the first frame update
     void Start()
@@ -29,6 +30,7 @@ public class Warrior : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         agent.speed = movementSpeed;
         _playerHealth = _player.gameObject.GetComponent<HPController>();
+        _playerLayer = _player.gameObject.layer;
     }
 
     // Update is called once per frame
@@ -110,8 +112,11 @@ public class Warrior : MonoBehaviour
     
     void _Attack()
     {
+        Debug.Log("Ataque");
+        
         if (IsPlayerInRange())
         {
+            Debug.Log("Morra player");
             _playerHealth.LoseHP(damage);
         }
     }
@@ -124,7 +129,7 @@ public class Warrior : MonoBehaviour
 
         if (distanceToTarget <= detectionRange && angle <= attackAngle / 2)
         {
-            if (!Physics.Raycast(transform.position, directionToTarget, distanceToTarget))
+            if (!Physics.Raycast(transform.position, directionToTarget, distanceToTarget, _playerLayer))
             {
                 return true;
             }
