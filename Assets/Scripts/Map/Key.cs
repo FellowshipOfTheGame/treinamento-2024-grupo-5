@@ -12,8 +12,13 @@ public class Key : MonoBehaviour
 
     private void Start()
     {
+        if(UIKey == null)
+        {
+            Debug.LogError("UIKey não foi atribuído ao objeto " + name);
+            return;
+        }
+
         HideUIKey();
-        
     }
     public void UseKey()
     {

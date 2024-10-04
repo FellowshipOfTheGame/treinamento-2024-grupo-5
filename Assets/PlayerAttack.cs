@@ -68,7 +68,7 @@ public class PlayerAttack : MonoBehaviour
         var collisions = Physics.OverlapSphere(attackPoint.position, _weaponItem.range);
         foreach (var collision in collisions)
         {
-            if (Generics.FamilyTryGetComponent(collision.gameObject, out EnemyHPController hpController) && hpController.gameObject.tag == "Enemy")
+            if (Generics.FamilyTryGetComponent(collision.gameObject, out EnemyHPController hpController))
                 hpController.TakeDamage();
         }
     }

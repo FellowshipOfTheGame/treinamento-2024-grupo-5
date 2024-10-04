@@ -58,8 +58,6 @@ public class Player : MonoBehaviour
                     
                     // Inicia a coroutine para esperar 1 segundo antes de ir para o próximo nível
                     StartCoroutine(WaitAndGoToNextLevel(door));
-
-                    
                 }
             }
         }

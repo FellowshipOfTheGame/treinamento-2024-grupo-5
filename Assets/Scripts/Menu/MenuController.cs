@@ -22,6 +22,7 @@ public class MenuController : MonoBehaviour
         }
 
         HideCursor();
+     
         gameOverUI.SetActive(false);
         victoryUI.SetActive(false);
 
@@ -64,10 +65,9 @@ public class MenuController : MonoBehaviour
             cameraController.StopCameraMovement();
         }
 
-        GetComponent<SoundEffectsController>().PlayVictorySound();
+        if(TryGetComponent<SoundEffectsController>(out SoundEffectsController soundEffectsController))
+            soundEffectsController.PlayVictorySound();
 
         Time.timeScale = 0;
     }
-
-
 }

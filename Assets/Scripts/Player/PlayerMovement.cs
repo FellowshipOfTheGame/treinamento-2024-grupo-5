@@ -17,15 +17,15 @@ public class PlayerMovement : MonoBehaviour
     [Header("Ground Movemnent")]
     [SerializeField] private float groundMoveSpeed = 10;
     [SerializeField] private InterpolatedFloat groundMoveTime = new(1, 0.2f);
-    [SerializeField]  float groundMoveDuration;
+    [SerializeField] float groundMoveDuration;
 
     // Counter movement
     private bool _isStatic = true;
-    [SerializeField] private InterpolatedFloat _staticDesacellerationTime = new(1, 0.35f);
+    private InterpolatedFloat _staticDesacellerationTime = new(1, 0.35f);
     [SerializeField] private float stopDefaultDuration;
 
     [Header("Air Movement")]
-    [SerializeField] private float airMoveSpeed = 15;
+    private float _airMoveSpeed = 15;
     [SerializeField] private float airDesaccelerateSpeed;
     [SerializeField] private float airMoveMaxSpeed = 70;
 
@@ -38,22 +38,22 @@ public class PlayerMovement : MonoBehaviour
     [Range(0, 1)]
     [SerializeField] private float gravityPercentWhileJumping = 0.75f;
     [SerializeField] private float jumpForce = 15;
-    [SerializeField] private bool _isJumping = false;
-    [SerializeField] private bool _canJump = false;
+    private bool _isJumping = false;
+    private bool _canJump = false;
 
     // Checks
-    [SerializeField]  private bool _isGrounded = false;
+    private bool _isGrounded = false;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float changeIsGroundedStateDelay = 0.1f;
     private Coroutine _cancellingGrounded;
     private Vector3 _normalVector;
     // Pre-groud sphere
     [SerializeField] private float preGroundSphereRadius = 0.5f;
-    [SerializeField] private bool _isPreground = false;
+    private bool _isPreground = false;
 
     [Header("Walljump")]
     // Checks
-    [SerializeField] private bool _isTouchingWall;
+    private bool _isTouchingWall;
     [SerializeField] private LayerMask wallLayer;
     [SerializeField] private float changeWallSlideStateDelay = 0.1f;
     private Coroutine _cancellingWallslide;
@@ -70,7 +70,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private bool canDash = true;
 
     // Slide while dashing
-    [SerializeField] private bool _isDashing = false;
+    private bool _isDashing = false;
     [SerializeField] private float dashDuration = 0.2f;
 
     [Header("Camera Effects")]
@@ -99,6 +99,9 @@ public class PlayerMovement : MonoBehaviour
         if (firstPerson == null)
             Generics.ReallyTryGetComponent(gameObject, out firstPerson);
         fovChangeEffect.SetStartValue(firstPerson.baseFOV);
+
+        if(orientation == null)
+            orientation = firstPerson.transform;
 
 
         // Inputs
@@ -335,14 +338,14 @@ public class PlayerMovement : MonoBehaviour
         Vector3 foward = _planeOrientationForward * _keyboard.y;
         Vector3 sideways = _planeOrientationRight * _keyboard.x;
 
-        airMoveSpeed = GetAirMoveSpeed(Mathf.Clamp(airVelocity.magnitude, 0, 60));
+        _airMoveSpeed = GetAirMoveSpeed(Mathf.Clamp(airVelocity.magnitude, 0, 60));
         airDesaccelerateSpeed = GetAirDesaccelerationMoveSpeed(Mathf.Clamp(airVelocity.magnitude, 0, 60));
         
         // Foward
         if (Vector3.Angle(foward, rb.velocity) > 90f)
             rb.AddForce(foward * airDesaccelerateSpeed);
         else
-            rb.AddForce(foward * airMoveSpeed);
+            rb.AddForce(foward * _airMoveSpeed);
 
         //Debug.Log($"Foward: {Vector3.Angle(foward, rb.velocity)}");
 
@@ -350,7 +353,7 @@ public class PlayerMovement : MonoBehaviour
         if (Vector3.Angle(sideways, rb.velocity) > 90f)
             rb.AddForce(sideways * airDesaccelerateSpeed * 0.75f);
         else
-            rb.AddForce(sideways * airMoveSpeed * 0.75f);
+            rb.AddForce(sideways * _airMoveSpeed * 0.75f);
 
         //Debug.Log($"Sideways: {Vector3.Angle(sideways, rb.velocity)}");
     }
