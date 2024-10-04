@@ -1,37 +1,41 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Arrow : MonoBehaviour
 {
     [SerializeField] private float gravity;
-    [SerializeField] private float damange;
-    private Vector3 velocity;
+    [SerializeField] private int damage;
+    private Vector3 _velocity;
+    private HPController _playerHealthSystem;
 
-    void Start()
+    public void Initialize(GameObject player, Vector3 velocity)
     {
-        velocity = GetComponent<Rigidbody>().velocity;
+        _velocity = GetComponent<Rigidbody>().velocity;
+        _velocity = velocity;
+
+        _playerHealthSystem = player.GetComponent<HPController>();
     }
 
     void Update()
     {
         // Aplicar gravidade à flecha
-        velocity.y += gravity * Time.deltaTime;
-        GetComponent<Rigidbody>().velocity = velocity;
+        _velocity.y += gravity * Time.deltaTime;
+        GetComponent<Rigidbody>().velocity = _velocity;
 
         // Alinhar a flecha na direção do movimento
-        transform.rotation = Quaternion.LookRotation(velocity);
+        transform.rotation = Quaternion.LookRotation(_velocity);
     }
     
     private void OnCollisionEnter(Collision other)
     {
-        //Debug.Log(other.gameObject.tag);
-        GetComponent<Rigidbody>().isKinematic = true;
+        Debug.Log(other.gameObject.tag);
+        // GetComponent<Rigidbody>().isKinematic = true;
         
         if (other.gameObject.CompareTag("Player"))
         {
-            //Debug.Log("Acertou o player");
+            Debug.Log("Acertou o jogador");
+            other.gameObject.GetComponent<HPController>().LoseHP(damage);
+            //other.gameObject.GetComponent<Transform>().parent.GetComponentInParent<HPController>().LoseHP(damage);
         }
         
         Destroy(gameObject);

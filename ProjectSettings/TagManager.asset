@@ -10,6 +10,7 @@ TagManager:
   - Win
   - Key
   - Door
+  - PlayerBody
   layers:
   - Default
   - TransparentFX

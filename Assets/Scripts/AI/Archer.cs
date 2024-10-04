@@ -109,7 +109,8 @@ public class Archer : MonoBehaviour
     {
         Vector3 direction = GetAimDirection();
         GameObject arrow = Instantiate(arrowPrefab, firePoint.position, Quaternion.identity);
-        arrow.GetComponent<Rigidbody>().velocity = direction * arrowSpeed;
+        arrow.GetComponent<Arrow>().Initialize(_player.gameObject, direction * arrowSpeed);
+        //arrow.GetComponent<Rigidbody>().velocity = direction * arrowSpeed;
     }
     
     void StopShooting()

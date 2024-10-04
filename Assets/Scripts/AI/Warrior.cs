@@ -5,8 +5,9 @@ using UnityEngine.AI;
 
 public class Warrior : MonoBehaviour
 {
-    [SerializeField] private float damage = 10f;
+    [SerializeField] private int damage = 10;
     [SerializeField] private float attackRange = 1.5f;
+    [SerializeField] private float attackAngle = 60f;
     [SerializeField] private float attackCooldown = 3f;
     [SerializeField] private float firstAttackCooldown = 0.5f;
     [SerializeField] private float movementSpeed = 3f;
@@ -19,6 +20,7 @@ public class Warrior : MonoBehaviour
     private bool _canAttack = true;
     private Coroutine _attackCoroutine;
     private float _distanceToPlayer;
+    private HPController _playerHealth;
     
     // Start is called before the first frame update
     void Start()
@@ -26,6 +28,7 @@ public class Warrior : MonoBehaviour
         _player = GameObject.FindWithTag("Player").transform;
         agent = GetComponent<NavMeshAgent>();
         agent.speed = movementSpeed;
+        _playerHealth = _player.gameObject.GetComponent<HPController>();
     }
 
     // Update is called once per frame
@@ -107,6 +110,33 @@ public class Warrior : MonoBehaviour
     
     void _Attack()
     {
-        Debug.Log("Ataque");
+        if (IsPlayerInRange())
+        {
+            _playerHealth.LoseHP(damage);
+        }
+    }
+
+    bool IsPlayerInRange()
+    {
+        Vector3 directionToTarget = (_player.position - transform.position).normalized;
+        float distanceToTarget = Vector3.Distance(transform.position, _player.position);
+        float angle = Vector3.Angle(transform.forward, directionToTarget);
+
+        if (distanceToTarget <= detectionRange && angle <= attackAngle / 2)
+        {
+            if (!Physics.Raycast(transform.position, directionToTarget, distanceToTarget))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
     }
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class MagicBall : MonoBehaviour
 {
+    [SerializeField] private int damage;
     private Transform target;
     private float speed;
     private float lifetime;
@@ -42,7 +43,9 @@ public class MagicBall : MonoBehaviour
         
         if (other.gameObject.CompareTag("Player"))
         {
-            //Debug.Log("Acertou o player");
+            Debug.Log("Acertou o jogador");
+            other.gameObject.GetComponent<HPController>().LoseHP(damage);
+            //other.gameObject.GetComponent<Transform>().parent.GetComponentInParent<HPController>().LoseHP(damage);
         }
         
         Destroy(gameObject);
