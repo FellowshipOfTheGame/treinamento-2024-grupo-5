@@ -86,24 +86,8 @@ public class HPController : MonoBehaviour
         CurrentHP = MaxHP;
     }
 
-    //Funcao para testar perda de vida e cura quando toca em inimigo
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            LoseHP(10); 
-
-        }
-        else if (collision.gameObject.CompareTag("Win"))
-        {
-            GameObject gameController = GameObject.FindGameObjectWithTag("GameController");
-            if (gameController != null)
-            {
-                gameController.GetComponent<MenuController>().Victory();
-                
-            }
-        }
-    }
+    
+    
 
     
 }
