@@ -65,8 +65,8 @@ public class Player : MonoBehaviour
 
     private IEnumerator WaitAndGoToNextLevel(Door door)
     {
-        yield return new WaitForSeconds(1.5f); // Espera 1 segundo
-        door.GoToNextLevel(); // Vai para o próximo nível
+        yield return new WaitForSeconds(1.5f); 
+        door.GoToNextLevel(); 
     }
 
     private void OnTriggerEnter(Collider other)
@@ -77,6 +77,7 @@ public class Player : MonoBehaviour
             key.GetKey();
             key.ShowUIKey();
             keys.Add(key);
+            Debug.Log("Pegou chave");
             GameObject.FindWithTag("Player").GetComponent<PlayerSoundEffects>().PlayKeySound();
         }
     }
