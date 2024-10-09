@@ -5343,10 +5343,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 639357443733515119, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
-      propertyPath: m_TagString
-      value: PlayerBody
-      objectReference: {fileID: 0}
     - target: {fileID: 1142203119912126955, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
       propertyPath: m_LocalPosition.x
       value: -6.3452697
@@ -5391,17 +5387,9 @@ PrefabInstance:
       propertyPath: HPBar
       value: 
       objectReference: {fileID: 278929855}
-    - target: {fileID: 2895663505818858286, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
-      propertyPath: m_TagString
-      value: Untagged
-      objectReference: {fileID: 0}
     - target: {fileID: 4632741985066660338, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
       propertyPath: m_Name
       value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 9187463006278666535, guid: d0427707cf33d634b95dd84f7a5aebf0, type: 3}
-      propertyPath: m_CollisionDetection
-      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

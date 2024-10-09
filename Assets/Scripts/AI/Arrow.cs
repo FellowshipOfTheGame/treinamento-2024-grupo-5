@@ -14,7 +14,6 @@ public class Arrow : MonoBehaviour
         _velocity = velocity;
 
         _playerHealthSystem = player.GetComponent<HPController>();
-        
     }
 
     void Update()
