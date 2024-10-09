@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3132287012912503951}
   m_Layer: 0
   m_Name: Body
-  m_TagString: Untagged
+  m_TagString: PlayerBody
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -291,6 +291,7 @@ MonoBehaviour:
   playerAttack: {fileID: 0}
   playerMovement: {fileID: 0}
   playerHealth: {fileID: 0}
+  playerSoundEffects: {fileID: 0}
   basicWeapon: {fileID: 11400000, guid: b73319ff41949104fb68b2ba76e1a4ef, type: 2}
 --- !u!114 &582460828412503522
 MonoBehaviour:
@@ -535,7 +536,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 2bfff2e9dd647e04b846a7096d1d0dbe, type: 3}
       propertyPath: m_TagString
-      value: Player
+      value: Untagged
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

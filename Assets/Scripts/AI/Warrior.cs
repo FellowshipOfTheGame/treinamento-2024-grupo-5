@@ -30,6 +30,7 @@ public class Warrior : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         agent.speed = movementSpeed;
         _playerHealth = _player.gameObject.GetComponent<HPController>();
+        Debug.Log(_playerHealth);
         _playerLayer = _player.gameObject.layer;
     }
 

@@ -35,6 +35,7 @@ public class Dragon : MonoBehaviour
     [SerializeField] private float range;
     [SerializeField] private int damage;
     [SerializeField] private ParticleSystem fireBreathEffect;
+    [SerializeField] private GameObject fire;
 
     private Transform _playerTransform;
     private float _distanceToPlayer;
@@ -194,6 +195,8 @@ public class Dragon : MonoBehaviour
 
     IEnumerator FireBreathCoroutine()
     {
+        fire.SetActive(true);
+        
         if (fireBreathEffect != null)
         {
             fireBreathEffect.Play();
@@ -212,6 +215,8 @@ public class Dragon : MonoBehaviour
         {
             fireBreathEffect.Stop();
         }
+        
+        fire.SetActive(false);
     }
 
     void ApplyFireBreathDamage()
