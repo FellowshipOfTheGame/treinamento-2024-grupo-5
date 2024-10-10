@@ -1794,6 +1794,7 @@ GameObject:
   - component: {fileID: 4427939781981747141}
   - component: {fileID: 2782066806326167675}
   - component: {fileID: 4675572130110391290}
+  - component: {fileID: 8437585415813619534}
   m_Layer: 6
   m_Name: Knight
   m_TagString: Enemy
@@ -1918,6 +1919,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hp: 1
   HPBar: {fileID: 0}
+--- !u!136 &8437585415813619534
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4979995066308584986}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 2.1520033
+  m_Height: 14.7858715
+  m_Direction: 1
+  m_Center: {x: -0.11393188, y: 0.11393547, z: 0.0000005960464}
 --- !u!1 &5051194980703355067
 GameObject:
   m_ObjectHideFlags: 0
